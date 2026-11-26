@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Projects admin · alqahysa.github.io</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <style>
+    :root {
+      --bg: #f6f5fb; --surface: #fff; --text: #14181f; --muted: #4a5563; --border: #d6dde4;
+      --accent: #5a3dd0; --accent-contrast: #fff; --danger: #b42318; --danger-soft: #fdecea;
+      --warn-bg: #fff6e0; --warn-text: #5c4200; --ok-bg: #e3f4ea; --ok-text: #0f5132; --focus: #1d5fd1;
+      color-scheme: light;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans Arabic", Tahoma, sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f0d17; --surface: #19161f; --text: #e6edf3; --muted: #a2afbc; --border: #2f3944;
+        --accent: #b5a4ff; --accent-contrast: #170f33; --danger: #ff8a80; --danger-soft: #3b1714;
+        --warn-bg: #3a2e0c; --warn-text: #f6dc93; --ok-bg: #0f3324; --ok-text: #a6f0c9; --focus: #79a8ff;
+        color-scheme: dark;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.5; }
+    main { max-width: 64rem; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+    h1 { font-size: 1.6rem; margin: 0 0 .25rem; display: flex; align-items: center; gap: .6rem; }
+    .owl { width: 2.6rem; height: 2.6rem; flex: none; }
+    h2 { font-size: 1.15rem; margin: 0 0 .75rem; }
+    a { color: var(--accent); }
+    :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+    .muted { color: var(--muted); }
+    [hidden] { display: none !important; }
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; margin-block: 1rem; }
+    .warning { background: var(--warn-bg); color: var(--warn-text); border-radius: 12px; padding: 1rem 1.25rem; margin-block: 1rem; }
+    .warning strong { display: block; margin-bottom: .25rem; }
+    .warning ul { margin: .25rem 0 0; padding-inline-start: 1.2rem; }
+    .grid { display: grid; gap: .9rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
+    .full { grid-column: 1 / -1; }
+    label { display: block; font-weight: 600; font-size: .92rem; margin-bottom: .25rem; }
+    .hint { font-weight: 400; color: var(--muted); font-size: .82rem; }
+    input[type=text], input[type=url], input[type=number], input[type=password], textarea {
+      width: 100%; padding: .55rem .65rem; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--bg); color: var(--text); font: inherit;
+    }
+    textarea { min-height: 5.5rem; resize: vertical; }
+    textarea.code, #json-preview { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .85rem; }
+    [dir=rtl] { text-align: right; }
+    .check { display: flex; align-items: center; gap: .5rem; font-weight: 600; }
+    .check input { width: 1.1rem; height: 1.1rem; }
+    .row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+    button {
+      min-height: 2.4rem; padding: .45rem .95rem; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text); font: inherit; font-weight: 600; cursor: pointer;
+    }
+    button:hover { border-color: var(--accent); }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    .primary { background: var(--accent); border-color: var(--accent); color: var(--accent-contrast); }
+    .danger { color: var(--danger); }
+    .danger:hover { border-color: var(--danger); background: var(--danger-soft); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: start; padding: .55rem .5rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    th { font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+    td.actions { white-space: nowrap; text-align: end; }
+    td.actions button { min-height: 2rem; padding: .25rem .65rem; }
+    .table-wrap { overflow-x: auto; }
+    .msg { border-radius: 8px; padding: .7rem .9rem; margin-top: .75rem; }
+    .msg.ok { background: var(--ok-bg); color: var(--ok-text); }
+    .msg.err { background: var(--danger-soft); color: var(--danger); }
+    .msg ul { margin: .25rem 0 0; padding-inline-start: 1.2rem; }
+    .field-error { border-color: var(--danger) !important; }
+    .dirty-flag { font-weight: 700; color: var(--warn-text); background: var(--warn-bg); padding: .15rem .55rem; border-radius: 999px; font-size: .8rem; }
+    details > summary { cursor: pointer; font-weight: 600; margin-block: .5rem; }
+    .empty { text-align: center; color: var(--muted); padding: 1.5rem; }
+  </style>
+</head>
+<body>
+<main>
+  <h1><svg class="owl" viewBox="0 0 64 64" aria-hidden="true"><path d="M14 18 10 4l12 9z M50 18l4-14-12 9z" fill="#17141f"/><ellipse cx="32" cy="42" rx="19" ry="19" fill="#17141f"/><circle cx="32" cy="27" r="19" fill="#17141f"/><ellipse cx="32" cy="46" rx="11" ry="12" fill="#2b2636"/><circle cx="24" cy="26" r="6.5" fill="#f5b83d"/><circle cx="40" cy="26" r="6.5" fill="#f5b83d"/><circle cx="24.6" cy="26.4" r="3.3" fill="#0d0b12"/><circle cx="40.6" cy="26.4" r="3.3" fill="#0d0b12"/><path d="M32 31l-3 3.2 3 3.2 3-3.2z" fill="#f08a3c"/></svg>Projects admin</h1>
+  <p class="muted">Edit <code>projects.json</code> for <a href="./">your portfolio</a>. Changes stay in this page until you save them to GitHub or download the file.</p>
+
+  <div class="warning" role="note">
+    <strong>Security: how your token is handled</strong>
+    <ul>
+      <li>Your token is kept <b>only in sessionStorage</b> for this browser tab. It is never written to the code, to projects.json or to the repository, and it is erased when you close the tab or press “Forget token”.</li>
+      <li>Use a <b>fine-grained</b> personal access token limited to the single repository <code>alqahysa.github.io</code> with <b>Contents: Read and write</b> only, and a short expiry (for example 7–30 days).</li>
+      <li>Only use this page on your own device. Never commit a token, paste it into projects.json, or share a screenshot that shows it.</li>
+    </ul>
+  </div>
+
+  <!-- 1. Connection -->
+  <section class="panel" aria-labelledby="conn-title">
+    <h2 id="conn-title">1. Connect to GitHub</h2>
+    <form id="conn-form" class="grid" autocomplete="off">
+      <div><label for="owner">Owner</label><input id="owner" type="text" value="alqahysa" required spellcheck="false"></div>
+      <div><label for="repo">Repository</label><input id="repo" type="text" value="alqahysa.github.io" required spellcheck="false"></div>
+      <div><label for="branch">Branch</label><input id="branch" type="text" value="main" required spellcheck="false"></div>
+      <div class="full">
+        <label for="token">Fine-grained personal access token <span class="hint">(stored in sessionStorage only)</span></label>
+        <input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…">
+      </div>
+      <div class="full row">
+        <button type="submit" class="primary">Load projects.json from GitHub</button>
+        <button type="button" id="load-site">Load the published file (no token)</button>
+        <button type="button" id="forget-token" class="danger">Forget token</button>
+        <span id="token-state" class="muted"></span>
+      </div>
+    </form>
+    <div id="conn-msg" role="status" aria-live="polite"></div>
+  </section>
+
+  <!-- 2. Project list -->
+  <section class="panel" aria-labelledby="list-title">
+    <div class="row" style="justify-content: space-between;">
+      <h2 id="list-title" style="margin:0">2. Projects <span id="dirty" class="dirty-flag" hidden>Unsaved changes</span></h2>
+      <button type="button" id="add-btn" class="primary" disabled>+ Add project</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption class="muted" style="text-align:start; padding:.5rem 0;">Sorted the same way as the site: featured first, then by order.</caption>
+        <thead><tr><th scope="col">Order</th><th scope="col">Title</th><th scope="col">Category</th><th scope="col">Featured</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+        <tbody id="list-body"><tr><td colspan="5" class="empty">Load projects.json to start.</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 3. Editor -->
+  <section class="panel" id="editor" aria-labelledby="editor-title" hidden>
+    <h2 id="editor-title">Edit project</h2>
+    <form id="project-form" novalidate>
+      <div class="grid">
+        <div><label for="f-id">id <span class="hint">(unique; lowercase letters, numbers, hyphens)</span></label><input id="f-id" type="text" spellcheck="false" required></div>
+        <div><label for="f-category">Category <span class="hint">(drives the filter buttons)</span></label><input id="f-category" type="text" list="category-list" placeholder="Data Engineering">
+          <datalist id="category-list"><option value="Data Engineering"><option value="AI / Machine Learning"><option value="Analytics &amp; BI"><option value="Data Governance"></datalist></div>
+        <div><label for="f-order">Order <span class="hint">(lower shows first)</span></label><input id="f-order" type="number" step="1"></div>
+        <div style="align-self:end"><label class="check"><input id="f-featured" type="checkbox"> Featured</label></div>
+        <div class="full"><label for="f-title">Title</label><input id="f-title" type="text" required></div>
+        <div class="full"><label for="f-tagline">Tagline <span class="hint">(one sentence)</span></label><input id="f-tagline" type="text" required></div>
+        <div class="full"><label for="f-problem">Problem <span class="hint">(2–3 sentences)</span></label><textarea id="f-problem" required></textarea></div>
+        <div class="full"><label for="f-highlights">Approach <span class="hint">(one per line; up to 4 are shown; describe what you did and why, not which tool)</span></label><textarea id="f-highlights" rows="5" required></textarea></div>
+        <div class="full"><label for="f-result">Result <span class="hint">(one sentence with a number: the outcome, not the tooling)</span></label><input id="f-result" type="text" required></div>
+        <div class="full"><label for="f-repo">Repository URL</label><input id="f-repo" type="url" required placeholder="https://github.com/alqahysa/…"></div>
+        <div class="full"><label for="f-guide">Step-by-step guide URL <span class="hint">(recommended; must be shared publicly)</span></label><input id="f-guide" type="url" placeholder="https://claude.ai/artifact/…"></div>
+        <div class="full"><label for="f-guide-label">Guide button text <span class="hint">(optional; default “Step-by-step guide”)</span></label><input id="f-guide-label" type="text"></div>
+        <div class="full"><label for="f-demo">Demo URL <span class="hint">(optional)</span></label><input id="f-demo" type="url"></div>
+      </div>
+
+      <details>
+        <summary>Arabic fields (optional; English is used when empty)</summary>
+        <div class="grid">
+          <div class="full"><label for="f-category-ar">category_ar</label><input id="f-category-ar" type="text" dir="rtl" lang="ar" placeholder="هندسة البيانات"></div>
+          <div class="full"><label for="f-guide-label-ar">guide_label_ar</label><input id="f-guide-label-ar" type="text" dir="rtl" lang="ar"></div>
+          <div class="full"><label for="f-title-ar">title_ar</label><input id="f-title-ar" type="text" dir="rtl" lang="ar"></div>
+          <div class="full"><label for="f-tagline-ar">tagline_ar</label><input id="f-tagline-ar" type="text" dir="rtl" lang="ar"></div>
+          <div class="full"><label for="f-problem-ar">problem_ar</label><textarea id="f-problem-ar" dir="rtl" lang="ar"></textarea></div>
+          <div class="full"><label for="f-highlights-ar">highlights_ar (Approach) <span class="hint">(one per line)</span></label><textarea id="f-highlights-ar" rows="5" dir="rtl" lang="ar"></textarea></div>
+          <div class="full"><label for="f-result-ar">result_ar</label><input id="f-result-ar" type="text" dir="rtl" lang="ar"></div>
+        </div>
+      </details>
+
+      <div id="form-msg" role="alert"></div>
+      <div class="row" style="margin-top:1rem">
+        <button type="submit" class="primary">Apply changes</button>
+        <button type="button" id="cancel-edit">Cancel</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- 4. Save -->
+  <section class="panel" aria-labelledby="save-title">
+    <h2 id="save-title">3. Save</h2>
+    <div class="grid">
+      <div class="full"><label for="commit-msg">Commit message</label><input id="commit-msg" type="text" value="Update projects.json via admin page"></div>
+    </div>
+    <div class="row" style="margin-top:.9rem">
+      <button type="button" id="save-btn" class="primary" disabled>Save to GitHub</button>
+      <button type="button" id="download-btn" disabled>Download JSON</button>
+    </div>
+    <p class="muted" style="margin:.6rem 0 0">GitHub Pages usually publishes a commit within 1–2 minutes. “Download JSON” is the fallback: replace projects.json in your repo with the downloaded file and commit it.</p>
+    <div id="save-msg" role="status" aria-live="polite"></div>
+    <details>
+      <summary>Preview the JSON that will be saved</summary>
+      <textarea id="json-preview" rows="14" readonly dir="ltr" aria-label="JSON preview"></textarea>
+    </details>
+  </section>
+</main>
+
+<style>.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}</style>
+<script>
+(function () {
+  'use strict';
+
+  var FILE_PATH = 'projects.json';
+  var TOKEN_KEY = 'gh_admin_token';   // sessionStorage ONLY
+  var API = 'https://api.github.com';
+
+  var state = { projects: null, sha: null, editingIndex: null, dirty: false, source: null };
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ---------- token: sessionStorage only ---------- */
+  function getToken() { try { return sessionStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return ''; } }
+  function setToken(v) { try { if (v) sessionStorage.setItem(TOKEN_KEY, v); else sessionStorage.removeItem(TOKEN_KEY); } catch (e) {} }
+  function refreshTokenState() {
+    $('token-state').textContent = getToken() ? 'Token held for this tab only.' : 'No token stored.';
+  }
+
+  /* ---------- UTF-8 safe base64 (Arabic text!) ---------- */
+  function b64encode(str) {
+    var bytes = new TextEncoder().encode(str), bin = '';
+    for (var i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(bin);
+  }
+  function b64decode(b64) {
+    var bin = atob(b64.replace(/\s/g, '')), bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder('utf-8').decode(bytes);
+  }
+
+  /* ---------- messages ---------- */
+  function show(target, kind, text, list) {
+    var box = $(target);
+    box.textContent = '';
+    if (!text) return;
+    var div = document.createElement('div');
+    div.className = 'msg ' + kind;
+    div.appendChild(document.createTextNode(text));
+    if (list && list.length) {
+      var ul = document.createElement('ul');
+      list.forEach(function (s) { var li = document.createElement('li'); li.textContent = s; ul.appendChild(li); });
+      div.appendChild(ul);
+    }
+    box.appendChild(div);
+  }
+
+  function setDirty(v) {
+    state.dirty = v;
+    $('dirty').hidden = !v;
+  }
+
+  /* ---------- GitHub API ---------- */
+  function repoPath() {
+    var owner = $('owner').value.trim(), repo = $('repo').value.trim();
+    return API + '/repos/' + encodeURIComponent(owner) + '/' + encodeURIComponent(repo) + '/contents/' + FILE_PATH;
+  }
+  function headers(token) {
+    return {
+      'Accept': 'application/vnd.github+json',
+      'Authorization': 'Bearer ' + token,
+      'X-GitHub-Api-Version': '2022-11-28'
+    };
+  }
+  function explain(status, body) {
+    var m = (body && body.message) ? ' GitHub said: “' + body.message + '”.' : '';
+    switch (status) {
+      case 401: return 'The token was rejected (401). It may be wrong or expired.' + m;
+      case 403: return 'Access denied (403). Check that the token has Contents: Read and write on this repository.' + m;
+      case 404: return 'Not found (404). Check owner, repository and branch, and that the token can access this repository.' + m;
+      case 409: case 422: return 'Conflict (' + status + '): projects.json changed on GitHub since you loaded it. Download your JSON as a backup, reload from GitHub, and re-apply your changes.' + m;
+      default: return 'GitHub request failed (' + status + ').' + m;
+    }
+  }
+
+  function loadFromGitHub(e) {
+    e.preventDefault();
+    var tokenInput = $('token');
+    if (tokenInput.value.trim()) { setToken(tokenInput.value.trim()); tokenInput.value = ''; }
+    var token = getToken();
+    refreshTokenState();
+    if (!token) { show('conn-msg', 'err', 'Paste your fine-grained token first.'); return; }
+    if (!confirmDiscard()) return;
+
+    show('conn-msg', 'ok', 'Loading…');
+    var url = repoPath() + '?ref=' + encodeURIComponent($('branch').value.trim());
+    fetch(url, { headers: headers(token), cache: 'no-store' })
+      .then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (body) { return { res: res, body: body }; });
+      })
+      .then(function (r) {
+        if (r.res.status === 404) {
+          state.sha = null;
+          useProjects([], 'github');
+          show('conn-msg', 'ok', 'projects.json does not exist on this branch yet (or the token cannot see it). You can add projects and “Save to GitHub” will create the file.');
+          return;
+        }
+        if (!r.res.ok) throw new Error(explain(r.res.status, r.body));
+        var text = b64decode(r.body.content || '');
+        var data = parseProjects(text);
+        state.sha = r.body.sha;
+        useProjects(data, 'github');
+        show('conn-msg', 'ok', 'Loaded ' + data.length + ' project(s) from ' + $('owner').value + '/' + $('repo').value + ' (' + $('branch').value + ').');
+      })
+      .catch(function (err) { show('conn-msg', 'err', err.message || String(err)); });
+  }
+
+  function loadFromSite() {
+    if (!confirmDiscard()) return;
+    fetch(FILE_PATH, { cache: 'no-store' })
+      .then(function (res) { if (!res.ok) throw new Error('Could not load ./' + FILE_PATH + ' (HTTP ' + res.status + ').'); return res.text(); })
+      .then(function (text) {
+        var data = parseProjects(text);
+        state.sha = null;
+        useProjects(data, 'site');
+        show('conn-msg', 'ok', 'Loaded ' + data.length + ' project(s) from the published site. To save to GitHub, load from GitHub instead (needed for the file version), or use Download JSON.');
+      })
+      .catch(function (err) { show('conn-msg', 'err', err.message); });
+  }
+
+  function parseProjects(text) {
+    var data;
+    try { data = JSON.parse(text); } catch (e) { throw new Error('projects.json is not valid JSON: ' + e.message); }
+    if (data && !Array.isArray(data) && Array.isArray(data.projects)) data = data.projects;
+    if (!Array.isArray(data)) throw new Error('projects.json must contain an array of projects.');
+    return data.filter(function (p) { return p && typeof p === 'object'; });
+  }
+
+  function useProjects(list, source) {
+    state.projects = list;
+    state.source = source;
+    setDirty(false);
+    closeEditor();
+    $('add-btn').disabled = false;
+    $('download-btn').disabled = false;
+    $('save-btn').disabled = false;
+    renderList();
+  }
+
+  function confirmDiscard() {
+    return !state.dirty || confirm('You have unsaved changes. Discard them and reload?');
+  }
+
+  /* ---------- list ---------- */
+  function sortedIndexes() {
+    return state.projects.map(function (p, i) { return i; }).sort(function (a, b) {
+      var pa = state.projects[a], pb = state.projects[b];
+      var fa = pa.featured === true, fb = pb.featured === true;
+      if (fa !== fb) return fa ? -1 : 1;
+      var oa = isFinite(Number(pa.order)) && pa.order !== '' && pa.order != null ? Number(pa.order) : Infinity;
+      var ob = isFinite(Number(pb.order)) && pb.order !== '' && pb.order != null ? Number(pb.order) : Infinity;
+      if (oa !== ob) return oa - ob;
+      return String(pa.title || '').localeCompare(String(pb.title || ''));
+    });
+  }
+
+  function cell(text) { var td = document.createElement('td'); td.textContent = text; return td; }
+
+  function renderList() {
+    var body = $('list-body');
+    body.textContent = '';
+    if (!state.projects.length) {
+      var tr = document.createElement('tr'), td = cell('No projects yet. Use “+ Add project”.');
+      td.colSpan = 5; td.className = 'empty'; tr.appendChild(td); body.appendChild(tr);
+    }
+    sortedIndexes().forEach(function (i) {
+      var p = state.projects[i];
+      var tr = document.createElement('tr');
+      tr.appendChild(cell(p.order == null || p.order === '' ? '–' : String(p.order)));
+      var tdTitle = cell(p.title || '(untitled)'); tdTitle.style.fontWeight = '600'; tr.appendChild(tdTitle);
+      tr.appendChild(cell(p.category || ''));
+      tr.appendChild(cell(p.featured === true ? 'Yes' : 'No'));
+      var actions = document.createElement('td'); actions.className = 'actions';
+      var edit = document.createElement('button'); edit.type = 'button'; edit.textContent = 'Edit';
+      edit.setAttribute('aria-label', 'Edit ' + (p.title || p.id || 'project'));
+      edit.addEventListener('click', function () { openEditor(i); });
+      var del = document.createElement('button'); del.type = 'button'; del.textContent = 'Delete'; del.className = 'danger';
+      del.setAttribute('aria-label', 'Delete ' + (p.title || p.id || 'project'));
+      del.addEventListener('click', function () {
+        if (!confirm('Delete “' + (p.title || p.id) + '”? This only changes the page until you save.')) return;
+        state.projects.splice(i, 1);
+        if (state.editingIndex !== null) closeEditor();
+        setDirty(true); renderList();
+        show('save-msg', 'ok', 'Project deleted. Save to GitHub or download the JSON to make it permanent.');
+      });
+      actions.appendChild(edit); actions.appendChild(document.createTextNode(' ')); actions.appendChild(del);
+      tr.appendChild(actions);
+      body.appendChild(tr);
+    });
+    $('json-preview').value = serialize();
+  }
+
+  function serialize() { return state.projects ? JSON.stringify(state.projects, null, 2) + '\n' : ''; }
+
+  /* ---------- editor ---------- */
+  var FIELDS = {
+    'f-id': 'id', 'f-category': 'category', 'f-guide': 'guide_url', 'f-guide-label': 'guide_label',
+    'f-category-ar': 'category_ar', 'f-guide-label-ar': 'guide_label_ar', 'f-title': 'title', 'f-tagline': 'tagline', 'f-problem': 'problem',
+    'f-result': 'result', 'f-repo': 'repo_url', 'f-demo': 'demo_url', 'f-title-ar': 'title_ar', 'f-tagline-ar': 'tagline_ar', 'f-problem-ar': 'problem_ar',
+    'f-result-ar': 'result_ar'
+  };
+
+  function openEditor(index) {
+    state.editingIndex = index;
+    var p = index == null ? {} : state.projects[index];
+    $('editor-title').textContent = index == null ? 'Add project' : 'Edit: ' + (p.title || p.id);
+    Object.keys(FIELDS).forEach(function (id) {
+      var v = p[FIELDS[id]];
+      $(id).value = Array.isArray(v) ? v.join('\n') : (v == null ? '' : String(v));
+    });
+    $('f-highlights').value = Array.isArray(p.highlights) ? p.highlights.join('\n') : (p.highlights || '');
+    $('f-highlights-ar').value = Array.isArray(p.highlights_ar) ? p.highlights_ar.join('\n') : (p.highlights_ar || '');
+    $('f-featured').checked = p.featured === true;
+    if (index == null) {
+      var max = state.projects.reduce(function (m, x) { var o = Number(x.order); return isFinite(o) && o > m ? o : m; }, 0);
+      $('f-order').value = max + 1;
+    } else {
+      $('f-order').value = p.order == null ? '' : p.order;
+    }
+    document.querySelectorAll('.field-error').forEach(function (n) { n.classList.remove('field-error'); });
+    show('form-msg', '', '');
+    $('editor').hidden = false;
+    $('editor').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    $('f-title').focus({ preventScroll: true });
+  }
+
+  function closeEditor() { state.editingIndex = null; $('editor').hidden = true; }
+
+  function lines(v) { return v.split('\n').map(function (s) { return s.trim(); }).filter(Boolean); }
+  function isHttpUrl(v) { try { var u = new URL(v); return u.protocol === 'https:' || u.protocol === 'http:'; } catch (e) { return false; } }
+  function isImagePath(v) {
+    if (isHttpUrl(v)) return true;
+    return /^[A-Za-z0-9_\-./]+\.(png|jpe?g|gif|svg|webp|avif)$/i.test(v) && v.indexOf('..') === -1 && v.charAt(0) !== '/';
+  }
+
+  function validate(d) {
+    var errs = [], bad = [];
+    function need(cond, msg, fieldId) { if (!cond) { errs.push(msg); if (fieldId) bad.push(fieldId); } }
+    need(/^[a-z0-9]+(-[a-z0-9]+)*$/.test(d.id), 'id is required: lowercase letters, numbers and single hyphens (e.g. my-fabric-project).', 'f-id');
+    var clash = state.projects.some(function (p, i) { return i !== state.editingIndex && p.id === d.id; });
+    need(!clash, 'Another project already uses the id “' + d.id + '”. Ids must be unique.', 'f-id');
+    need(d.title.length > 0, 'Title is required.', 'f-title');
+    need(d.title.length <= 140, 'Title is too long (max 140 characters).', 'f-title');
+    need(d.tagline.length > 0, 'Tagline is required.', 'f-tagline');
+    need(d.tagline.length <= 300, 'Tagline should be one sentence (max 300 characters).', 'f-tagline');
+    need(d.problem.length > 0, 'Problem is required.', 'f-problem');
+    need(d.highlights.length >= 1, 'Add at least one approach point (3–4 recommended).', 'f-highlights');
+    need(d.highlights.length <= 4, 'Keep the approach to 4 points or fewer (the card shows up to 4).', 'f-highlights');
+    need(d.result.length > 0, 'Result is required.', 'f-result');
+    need(isHttpUrl(d.repo_url), 'Repository URL must start with https://', 'f-repo');
+    need(!d.guide_url || isHttpUrl(d.guide_url), 'Guide URL must be empty or start with https://', 'f-guide');
+    need(d.guide_label.length <= 40, 'Guide button text is long; keep it under 40 characters.', 'f-guide-label');
+    need(d.category.length > 0, 'Category is required (for example Data Engineering or AI / Machine Learning).', 'f-category');
+    need(d.category.length <= 40, 'Category is long; keep it under 40 characters.', 'f-category');
+    need(!d.demo_url || isHttpUrl(d.demo_url), 'Demo URL must be empty or start with https://', 'f-demo');
+    need(d.order === '' || isFinite(Number(d.order)), 'Order must be a number.', 'f-order');
+    return { errs: errs, bad: bad };
+  }
+
+  function applyForm(e) {
+    e.preventDefault();
+    var d = {
+      id: $('f-id').value.trim(), title: $('f-title').value.trim(),
+      tagline: $('f-tagline').value.trim(), problem: $('f-problem').value.trim(),
+      highlights: lines($('f-highlights').value), result: $('f-result').value.trim(),
+      repo_url: $('f-repo').value.trim(), guide_url: $('f-guide').value.trim(), guide_label: $('f-guide-label').value.trim(),
+      category: $('f-category').value.trim(), category_ar: $('f-category-ar').value.trim(), guide_label_ar: $('f-guide-label-ar').value.trim(), demo_url: $('f-demo').value.trim(),
+      order: $('f-order').value.trim(), featured: $('f-featured').checked,
+      title_ar: $('f-title-ar').value.trim(), tagline_ar: $('f-tagline-ar').value.trim(), problem_ar: $('f-problem-ar').value.trim(),
+      highlights_ar: lines($('f-highlights-ar').value), result_ar: $('f-result-ar').value.trim()
+    };
+
+    document.querySelectorAll('.field-error').forEach(function (n) { n.classList.remove('field-error'); n.removeAttribute('aria-invalid'); });
+    var v = validate(d);
+    if (v.errs.length) {
+      v.bad.forEach(function (id) { $(id).classList.add('field-error'); $(id).setAttribute('aria-invalid', 'true'); });
+      show('form-msg', 'err', 'Please fix the following:', v.errs);
+      if (v.bad[0]) $(v.bad[0]).focus();
+      return;
+    }
+
+    // Start from the existing object so any extra fields you added by hand are kept.
+    var base = state.editingIndex == null ? {} : Object.assign({}, state.projects[state.editingIndex]);
+    var out = {
+      id: d.id, title: d.title, category: d.category, category_ar: d.category_ar, tagline: d.tagline, problem: d.problem,
+      highlights: d.highlights, result: d.result, repo_url: d.repo_url, guide_url: d.guide_url, guide_label: d.guide_label, guide_label_ar: d.guide_label_ar, demo_url: d.demo_url,
+      featured: d.featured, order: d.order === '' ? undefined : Number(d.order),
+      title_ar: d.title_ar, tagline_ar: d.tagline_ar, problem_ar: d.problem_ar,
+      highlights_ar: d.highlights_ar, result_ar: d.result_ar
+    };
+    Object.keys(out).forEach(function (k) { base[k] = out[k]; });
+    // Drop empty optional fields to keep the JSON tidy.
+    ['category_ar', 'guide_url', 'guide_label', 'guide_label_ar', 'demo_url', 'order', 'title_ar', 'tagline_ar', 'problem_ar', 'result_ar']
+      .forEach(function (k) { if (base[k] === '' || base[k] === undefined) delete base[k]; });
+    if (!base.highlights_ar.length) delete base.highlights_ar;
+    // Tools, code and screenshots are no longer shown on cards, so old fields are dropped.
+    ['platform', 'stack', 'code_snippet', 'image', 'image_alt', 'image_alt_ar'].forEach(function (k) { delete base[k]; });
+
+    if (state.editingIndex == null) state.projects.push(base); else state.projects[state.editingIndex] = base;
+    setDirty(true);
+    closeEditor();
+    renderList();
+    show('save-msg', 'ok', 'Changes applied. Save to GitHub (or download the JSON) to publish them.');
+    $('save-btn').focus();
+  }
+
+  /* ---------- save ---------- */
+  function saveToGitHub() {
+    var token = getToken();
+    if (!token) { show('save-msg', 'err', 'No token in this tab. Paste it in step 1 and load from GitHub first.'); return; }
+    if (state.source !== 'github') {
+      show('save-msg', 'err', 'Load projects.json from GitHub first (step 1), so the save can confirm you are editing the latest version.'); return;
+    }
+    var json = serialize();
+    try { JSON.parse(json); } catch (e) { show('save-msg', 'err', 'Internal error: generated JSON is invalid.'); return; }
+
+    var body = {
+      message: $('commit-msg').value.trim() || 'Update projects.json via admin page',
+      content: b64encode(json),
+      branch: $('branch').value.trim()
+    };
+    if (state.sha) body.sha = state.sha;
+
+    $('save-btn').disabled = true;
+    show('save-msg', 'ok', 'Saving…');
+    fetch(repoPath(), { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, headers(token)), body: JSON.stringify(body) })
+      .then(function (res) { return res.json().catch(function () { return {}; }).then(function (b) { return { res: res, body: b }; }); })
+      .then(function (r) {
+        if (!r.res.ok) throw new Error(explain(r.res.status, r.body));
+        state.sha = r.body.content && r.body.content.sha;
+        setDirty(false);
+        var link = r.body.commit && r.body.commit.html_url;
+        show('save-msg', 'ok', 'Saved. Your site will update in about 1–2 minutes.' + (link ? ' Commit: ' + link : ''));
+      })
+      .catch(function (err) { show('save-msg', 'err', err.message || String(err)); })
+      .then(function () { $('save-btn').disabled = false; });
+  }
+
+  function download() {
+    var blob = new Blob([serialize()], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'projects.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  }
+
+  /* ---------- wire up ---------- */
+  $('conn-form').addEventListener('submit', loadFromGitHub);
+  $('load-site').addEventListener('click', loadFromSite);
+  $('forget-token').addEventListener('click', function () { setToken(''); $('token').value = ''; refreshTokenState(); show('conn-msg', 'ok', 'Token removed from this tab.'); });
+  $('add-btn').addEventListener('click', function () { openEditor(null); });
+  $('cancel-edit').addEventListener('click', closeEditor);
+  $('project-form').addEventListener('submit', applyForm);
+  $('save-btn').addEventListener('click', saveToGitHub);
+  $('download-btn').addEventListener('click', download);
+  window.addEventListener('beforeunload', function (e) { if (state.dirty) { e.preventDefault(); e.returnValue = ''; } });
+  refreshTokenState();
+})();
+</script>
+</body>
+</html>

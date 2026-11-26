@@ -1,0 +1,62 @@
+[
+  {
+    "id": "fabric-saudi-retail-analytics",
+    "title": "Saudi Retail Sales Analytics & Market Benchmark",
+    "title_ar": "تحليلات مبيعات التجزئة السعودية ومقارنتها بالسوق",
+    "category": "Data Engineering",
+    "category_ar": "هندسة البيانات",
+    "tagline": "An end-to-end lakehouse that automates a Saudi retailer's monthly sales reporting and benchmarks its growth against the national card-spending market.",
+    "tagline_ar": "منصة Lakehouse متكاملة تؤتمت تقارير المبيعات الشهرية لتاجر تجزئة سعودي، وتقارن نموه بسوق الإنفاق بالبطاقات على مستوى المملكة.",
+    "problem": "Waha Retail (fictional; 25 branches plus an online store) merged its monthly sales by hand in spreadsheets: slow, error-prone and late. Finance needed a self-updating dashboard and an answer to one question: are we growing faster or slower than the market?",
+    "problem_ar": "كانت شركة واحة للتجزئة (شركة افتراضية لديها 25 فرعًا ومتجر إلكتروني) تدمج مبيعاتها الشهرية يدويًا في جداول البيانات، وهي عملية بطيئة ومعرّضة للأخطاء وتتأخر نتائجها. احتاج فريق المالية إلى لوحة معلومات تتحدّث تلقائيًا، وإلى إجابة عن سؤال واحد: هل ننمو أسرع من السوق أم أبطأ؟",
+    "highlights": [
+      "Benchmarked growth against real SAMA point-of-sale data (2016–2026), indexed to 100 so the retailer and the market are compared like for like.",
+      "Modelled sales at two grains (order lines and orders), so payment methods are never double-counted.",
+      "Loaded only new and changed data each month, and stopped the run automatically whenever the raw and cleaned layers didn't reconcile.",
+      "Built a Saudi calendar into the model (Fri–Sat weekend, salary days, Ramadan, Eid, White Friday, National Day), with failure alerts and a tested Dev → Prod release path."
+    ],
+    "highlights_ar": [
+      "مقارنة النمو ببيانات نقاط البيع الفعلية من ساما (2016–2026) بعد تحويلها إلى مؤشر أساسه 100، ليُقارن تاجر التجزئة بالسوق بشكل متكافئ.",
+      "نمذجة المبيعات بمستويَي تفصيل (بنود الطلب والطلبات) حتى لا تُحتسب طرق الدفع مرتين أبدًا.",
+      "تحميل البيانات الجديدة والمعدّلة فقط كل شهر، وإيقاف التشغيل تلقائيًا عند عدم تطابق الطبقة الخام مع الطبقة المنقّحة.",
+      "بناء تقويم سعودي داخل النموذج (عطلة الجمعة والسبت، أيام الرواتب، رمضان، العيد، الجمعة البيضاء، اليوم الوطني)، مع تنبيهات عند الفشل ومسار نشر مُختبَر من التطوير إلى الإنتاج."
+    ],
+    "result": "About 166,000 orders over 36 months now refresh automatically every month, with 5 data-quality checks on every run and no manual merging.",
+    "result_ar": "نحو 166 ألف طلب على مدى 36 شهرًا تتحدّث تلقائيًا كل شهر، مع 5 فحوصات لجودة البيانات في كل تشغيل ودون أي دمج يدوي.",
+    "repo_url": "https://github.com/alqahysa/fabric-saudi-retail-analytics",
+    "guide_url": "https://claude.ai/artifact/24d5PkCMCVYeuNj3FCTXCG",
+    "demo_url": "",
+    "featured": true,
+    "order": 1
+  },
+  {
+    "id": "databricks-najd-bank-redelinquency",
+    "title": "Najd National Bank: 30-Day Re-Delinquency Analytics",
+    "title_ar": "بنك نجد الوطني: تحليلات تكرار التعثّر خلال 30 يومًا",
+    "category": "Data Engineering",
+    "category_ar": "هندسة البيانات",
+    "tagline": "A layered lakehouse that flags customers who miss an installment again within 30 days of getting back on track.",
+    "tagline_ar": "منصة Lakehouse متعددة الطبقات ترصد العملاء الذين يتعثّرون في سداد قسط مجددًا خلال 30 يومًا من انتظامهم.",
+    "problem": "Customers who become current after a missed installment often miss again within 30 days, which raises expected credit losses and provisions, strains collections, and draws SAMA attention. The bank needed to find these events and see which products, segments and branches drive them.",
+    "problem_ar": "العملاء الذين ينتظمون بعد تفويت قسط كثيرًا ما يتعثّرون مجددًا خلال 30 يومًا، مما يرفع الخسائر الائتمانية المتوقعة والمخصصات، ويضغط على فرق التحصيل، ويلفت انتباه ساما. احتاج البنك إلى رصد هذه الحالات ومعرفة المنتجات والشرائح والفروع التي تقف وراءها.",
+    "highlights": [
+      "Ingested new files automatically as they arrived, then de-duplicated and upserted them into clean customer, product and payment tables.",
+      "Modelled the data as a star schema across raw, clean and business-ready layers, with central access control.",
+      "Masked personal data to meet PDPL: only the last 4 digits of the National ID / Iqama and name initials are kept.",
+      "Shipped every change through automated CI/CD (feature → dev → main), and served the results through natural-language Q&A and a self-service dashboard."
+    ],
+    "highlights_ar": [
+      "استيعاب الملفات الجديدة تلقائيًا فور وصولها، ثم إزالة التكرار وتحديثها في جداول منقّحة للعملاء والمنتجات والمدفوعات.",
+      "نمذجة البيانات كنموذج نجمي عبر طبقات خام ومنقّحة وجاهزة للأعمال، مع تحكم مركزي في الصلاحيات.",
+      "إخفاء البيانات الشخصية وفق نظام حماية البيانات الشخصية: لا يُحتفظ إلا بآخر 4 أرقام من الهوية الوطنية أو الإقامة وبالأحرف الأولى من الاسم.",
+      "نشر كل تغيير عبر تكامل ونشر مستمرين وآليين (من feature إلى dev ثم main)، وإتاحة النتائج عبر أسئلة وأجوبة باللغة الطبيعية ولوحة معلومات ذاتية الخدمة."
+    ],
+    "result": "26.67% of delinquency events recur within 30 days in the sample data; the highest-rate branch is Jeddah Tahlia at 66.67%, and credit cards drive half of all re-delinquencies.",
+    "result_ar": "تتكرر 26.67% من حالات التعثّر خلال 30 يومًا في بيانات العيّنة؛ وأعلى الفروع نسبةً فرع جدة التحلية بنسبة 66.67%، وتقف البطاقات الائتمانية وراء نصف حالات تكرار التعثّر.",
+    "repo_url": "https://github.com/alqahysa/azure-databricks-najd-bank-redelinquency",
+    "guide_url": "https://claude.ai/artifact/6qCA57iA72yugJDWF7ox5h",
+    "demo_url": "",
+    "featured": true,
+    "order": 2
+  }
+]

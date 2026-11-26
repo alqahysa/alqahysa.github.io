@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sarah A. AlQahtani · Data &amp; AI Engineering Enthusiast</title>
+  <meta name="description" content="Sarah A. AlQahtani: data and AI engineering enthusiast who turns messy source data into trusted, automated insight for Saudi retail and banking. Case studies with results, repos and step-by-step guides.">
+  <meta name="author" content="Sarah A. AlQahtani">
+  <link rel="canonical" href="https://alqahysa.github.io/">
+  <meta name="theme-color" content="#f6f5fb">
+
+  <!-- Open Graph / social sharing -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Sarah A. AlQahtani">
+  <meta property="og:title" content="Sarah A. AlQahtani · Data &amp; AI Engineering Enthusiast">
+  <meta property="og:description" content="Data and AI engineering case studies with real results and step-by-step guides, from a night owl who loves clean data.">
+  <meta property="og:url" content="https://alqahysa.github.io/">
+  <meta property="og:image" content="https://alqahysa.github.io/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Sarah A. AlQahtani, Data and AI Engineering Enthusiast, with a black owl mascot">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="ar_SA">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Sarah A. AlQahtani · Data &amp; AI Engineering Enthusiast">
+  <meta name="twitter:description" content="Data and AI engineering case studies with real results and step-by-step guides.">
+  <meta name="twitter:image" content="https://alqahysa.github.io/assets/og-image.png">
+
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Set theme + language before first paint (no flash). -->
+  <script>
+    (function () {
+      var d = document.documentElement, theme = null, lang = null;
+      try { theme = localStorage.getItem('theme'); lang = localStorage.getItem('lang'); } catch (e) {}
+      var qs = new URLSearchParams(location.search).get('lang');
+      if (qs === 'ar' || qs === 'en') lang = qs;
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      d.setAttribute('data-theme', theme);
+      if (lang === 'ar') { d.lang = 'ar'; d.dir = 'rtl'; }
+    })();
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Sarah A. AlQahtani",
+    "jobTitle": "Data Engineer",
+    "url": "https://alqahysa.github.io/",
+    "email": "mailto:sarah.alqahtani00@gmail.com",
+    "address": { "@type": "PostalAddress", "addressLocality": "Dhahran", "addressCountry": "SA" },
+    "alumniOf": ["Imam Abdulrahman bin Faisal University", "University of Dammam"],
+    "sameAs": ["https://github.com/alqahysa", "https://www.linkedin.com/in/sarahalqahtani90/"],
+    "knowsAbout": ["Data engineering", "AI engineering", "Lakehouse architecture", "Data quality", "Data modelling", "Analytics"]
+  }
+  </script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <!-- Reusable owl drawings (used by the logo, empty and error states). -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="owl-mini" viewBox="0 0 64 64">
+        <path d="M14 18 10 4l12 9z M50 18l4-14-12 9z" fill="#17141f"/>
+        <ellipse cx="32" cy="42" rx="19" ry="19" fill="#17141f"/>
+        <circle cx="32" cy="27" r="19" fill="#17141f"/>
+        <ellipse cx="32" cy="46" rx="11" ry="12" fill="#2b2636"/>
+        <circle cx="24" cy="26" r="8.5" fill="#2b2636"/><circle cx="40" cy="26" r="8.5" fill="#2b2636"/>
+        <circle cx="24" cy="26" r="6.5" fill="#f5b83d"/><circle cx="40" cy="26" r="6.5" fill="#f5b83d"/>
+        <circle cx="24.6" cy="26.4" r="3.3" fill="#0d0b12"/><circle cx="40.6" cy="26.4" r="3.3" fill="#0d0b12"/>
+        <circle cx="23.4" cy="24.6" r="1.2" fill="#fff"/><circle cx="39.4" cy="24.6" r="1.2" fill="#fff"/>
+        <path d="M32 31l-3 3.2 3 3.2 3-3.2z" fill="#f08a3c"/>
+      </symbol>
+      <symbol id="owl-sleepy" viewBox="0 0 64 64">
+        <path d="M14 18 10 4l12 9z M50 18l4-14-12 9z" fill="#17141f"/>
+        <ellipse cx="32" cy="42" rx="19" ry="19" fill="#17141f"/>
+        <circle cx="32" cy="27" r="19" fill="#17141f"/>
+        <ellipse cx="32" cy="46" rx="11" ry="12" fill="#2b2636"/>
+        <circle cx="24" cy="26" r="8.5" fill="#2b2636"/><circle cx="40" cy="26" r="8.5" fill="#2b2636"/>
+        <path d="M19 26q5 4 10 0M35 26q5 4 10 0" fill="none" stroke="#f5b83d" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M32 31l-3 3.2 3 3.2 3-3.2z" fill="#f08a3c"/>
+        <ellipse cx="19" cy="34" rx="3" ry="1.8" fill="#ff8fa3" opacity=".45"/><ellipse cx="45" cy="34" rx="3" ry="1.8" fill="#ff8fa3" opacity=".45"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <a class="skip-link" href="#main" data-i18n="skip">Skip to main content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#top">
+        <svg class="brand-owl" aria-hidden="true"><use href="#owl-mini"/></svg>
+        <span class="brand-name" data-i18n="name">Sarah A. AlQahtani</span>
+      </a>
+      <nav aria-label="Sections" data-i18n-attr="aria-label:nav.label">
+        <ul class="nav-links">
+          <li><a href="#skills" data-i18n="nav.skills">Skills</a></li>
+          <li><a href="#projects" data-i18n="nav.projects">Projects</a></li>
+          <li><a href="#about" data-i18n="nav.about">About</a></li>
+          <li><a href="#contact" data-i18n="nav.contact">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button type="button" class="icon-btn lang-btn" id="lang-toggle" lang="ar" aria-label="عرض الصفحة بالعربية">عربي</button>
+        <button type="button" class="icon-btn" id="theme-toggle" aria-label="Switch to night mode">
+          <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+          <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <!-- 1. HERO -->
+    <section class="hero" id="top" aria-labelledby="hero-name">
+      <div class="container hero-inner">
+        <div class="hero-text">
+          <p class="eyebrow">
+            <span class="eyebrow-sep" aria-hidden="true">✦</span>
+            <span data-i18n="hero.eyebrow">Data &amp; AI Engineering enthusiast</span>
+          </p>
+          <h1 id="hero-name" data-i18n="name">Sarah A. AlQahtani</h1>
+          <p class="lead" data-i18n="hero.title">I turn messy source data into trusted, automated insight for Saudi retail and banking, and I love exploring where clean data meets AI.</p>
+
+          <div class="cta-row">
+            <a class="btn btn-primary" href="#projects">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <span data-i18n="cta.projects">See my projects</span>
+            </a>
+            <a class="btn" href="https://github.com/alqahysa" rel="me noopener" target="_blank">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 7-5 5 5 5M16 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span data-i18n="cta.github">GitHub</span>
+            </a>
+            <a class="btn" href="https://www.linkedin.com/in/sarahalqahtani90/" rel="me noopener" target="_blank">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3 12h18" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+              <span data-i18n="cta.linkedin">LinkedIn</span>
+            </a>
+            <a class="btn" href="mailto:sarah.alqahtani00@gmail.com">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m4 7 8 6 8-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+              <span data-i18n="cta.email">Email</span>
+            </a>
+            <a class="btn" id="cv-link" href="assets/cv.pdf" download>
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 3v5h5M10 13h6M10 17h6" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+              <span data-i18n="cta.cv">CV</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Illustrated scene: a night owl guarding a bronze → silver → gold pipeline -->
+        <figure class="hero-scene">
+          <svg id="owl-scene" viewBox="0 0 520 440" direction="ltr" role="img" aria-labelledby="scene-title">
+            <title id="scene-title" data-i18n="scene.alt">A cute black owl perched on a branch beside a data pipeline that flows from bronze to silver to gold.</title>
+            <defs>
+              <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" class="sky-top"/><stop offset="1" class="sky-bottom"/>
+              </linearGradient>
+              <radialGradient id="moonGlow"><stop offset="0" stop-color="#fff3d1" stop-opacity=".55"/><stop offset="1" stop-color="#fff3d1" stop-opacity="0"/></radialGradient>
+              <radialGradient id="orbBronze" cx=".35" cy=".35"><stop offset="0" stop-color="#f3c49a"/><stop offset="1" stop-color="#a0602b"/></radialGradient>
+              <radialGradient id="orbSilver" cx=".35" cy=".35"><stop offset="0" stop-color="#f4f6f9"/><stop offset="1" stop-color="#8a96a3"/></radialGradient>
+              <radialGradient id="orbGold" cx=".35" cy=".35"><stop offset="0" stop-color="#fff0b8"/><stop offset="1" stop-color="#c8920e"/></radialGradient>
+            </defs>
+
+            <rect width="520" height="440" rx="28" fill="url(#sky)"/>
+            <!-- moon + stars -->
+            <circle cx="456" cy="62" r="70" fill="url(#moonGlow)"/>
+            <circle cx="456" cy="62" r="28" fill="#fff3d1"/>
+            <circle cx="446" cy="54" r="5" fill="#f1e2b8"/><circle cx="466" cy="74" r="3.5" fill="#f1e2b8"/><circle cx="465" cy="50" r="2.2" fill="#f1e2b8"/>
+            <g class="stars" fill="#fff">
+              <circle cx="60" cy="50" r="2"/><circle cx="140" cy="34" r="1.5"/><circle cx="220" cy="70" r="2"/>
+              <circle cx="300" cy="40" r="1.4"/><circle cx="350" cy="130" r="1.6"/><circle cx="495" cy="160" r="1.8"/>
+              <circle cx="40" cy="150" r="1.5"/><circle cx="260" cy="150" r="1.2"/>
+            </g>
+            <!-- distant hills -->
+            <path d="M0 360 Q90 318 180 346 T360 334 T520 340 V440 H0z" class="hill-back"/>
+            <path d="M0 392 Q120 360 250 384 T520 378 V440 H0z" class="hill-front"/>
+
+            <!-- branch -->
+            <path d="M-6 346 C80 336 150 352 250 344 S420 330 530 338" fill="none" stroke="#3a2a22" stroke-width="13" stroke-linecap="round"/>
+            <path d="M280 344 q-10 -30 -40 -44" fill="none" stroke="#3a2a22" stroke-width="5" stroke-linecap="round"/>
+            <ellipse cx="238" cy="298" rx="12" ry="6" transform="rotate(30 238 298)" fill="#4f8a5b"/>
+            <ellipse cx="82" cy="352" rx="14" ry="6.5" transform="rotate(18 82 352)" fill="#4f8a5b"/>
+            <ellipse cx="494" cy="346" rx="13" ry="6" transform="rotate(-14 494 346)" fill="#4f8a5b"/>
+
+            <!-- data flow through medallion layers -->
+            <path class="flow" d="M250 318 H470" fill="none" stroke-width="3" stroke-linecap="round"/>
+            <g class="orb">
+              <circle cx="330" cy="318" r="21" fill="url(#orbBronze)"/>
+              <circle cx="400" cy="318" r="21" fill="url(#orbSilver)"/>
+              <circle cx="470" cy="318" r="21" fill="url(#orbGold)"/>
+              <path d="M322 314h16M322 321h11" stroke="#5e3612" stroke-width="2.4" stroke-linecap="round" opacity=".6"/>
+              <path d="M392 311h16M392 318h16M392 325h16" stroke="#4d5763" stroke-width="2.4" stroke-linecap="round" opacity=".6"/>
+              <path d="M462 325v-6M470 325v-12M478 325v-9" stroke="#7a5600" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+            </g>
+            <g class="orb-labels" font-size="14" font-weight="700" text-anchor="middle">
+              <text x="330" y="374" data-i18n="scene.bronze">Bronze</text>
+              <text x="400" y="374" data-i18n="scene.silver">Silver</text>
+              <text x="470" y="374" data-i18n="scene.gold">Gold</text>
+            </g>
+
+            <!-- speech bubble -->
+            <g class="bubble">
+              <path d="M244 112 h246 a14 14 0 0 1 14 14 v28 a14 14 0 0 1 -14 14 h-200 l-30 22 4 -22 h-20 a14 14 0 0 1 -14 -14 v-28 a14 14 0 0 1 14 -14z"/>
+              <text id="owl-says" x="374" y="145" text-anchor="middle" font-size="15" font-weight="650">Hoo! Clean data first.</text>
+            </g>
+
+            <!-- the owl (click / Enter for a data tip) -->
+            <g id="owl" class="owl" tabindex="0" role="button" aria-label="Ask the owl for a data tip">
+              <ellipse cx="160" cy="352" rx="70" ry="8" fill="#000" opacity=".18"/>
+              <!-- tufts -->
+              <path d="M104 152 92 104l38 34z M216 152l12-48-38 34z" class="owl-body"/>
+              <!-- wings + body -->
+              <path d="M88 250 q-14 60 26 92 q-6 -52 4 -92z" class="owl-wing"/>
+              <path d="M232 250 q14 60 -26 92 q6 -52 -4 -92z" class="owl-wing"/>
+              <ellipse cx="160" cy="262" rx="74" ry="82" class="owl-body"/>
+              <circle cx="160" cy="186" r="68" class="owl-body"/>
+              <!-- belly with feather scallops -->
+              <ellipse cx="160" cy="274" rx="46" ry="56" fill="#2a2535"/>
+              <g fill="none" stroke="#3e3750" stroke-width="2.4" stroke-linecap="round">
+                <path d="M136 252q6 7 12 0M154 252q6 7 12 0M172 252q6 7 12 0"/>
+                <path d="M128 272q6 7 12 0M146 272q6 7 12 0M164 272q6 7 12 0M182 272q6 7 12 0"/>
+                <path d="M136 292q6 7 12 0M154 292q6 7 12 0M172 292q6 7 12 0"/>
+              </g>
+              <!-- face discs -->
+              <circle cx="132" cy="186" r="33" fill="#262132"/>
+              <circle cx="188" cy="186" r="33" fill="#262132"/>
+              <!-- eyes -->
+              <circle cx="132" cy="186" r="25" fill="#f5b83d"/>
+              <circle cx="188" cy="186" r="25" fill="#f5b83d"/>
+              <circle cx="132" cy="186" r="25" fill="none" stroke="#e08f1f" stroke-width="3"/>
+              <circle cx="188" cy="186" r="25" fill="none" stroke="#e08f1f" stroke-width="3"/>
+              <g class="pupil" data-cx="132" data-cy="186"><circle cx="132" cy="186" r="13" fill="#0d0b12"/><circle cx="127" cy="180" r="4.5" fill="#fff"/><circle cx="137" cy="191" r="2" fill="#fff" opacity=".8"/></g>
+              <g class="pupil" data-cx="188" data-cy="186"><circle cx="188" cy="186" r="13" fill="#0d0b12"/><circle cx="183" cy="180" r="4.5" fill="#fff"/><circle cx="193" cy="191" r="2" fill="#fff" opacity=".8"/></g>
+              <!-- eyelids (blink) -->
+              <g class="lids" fill="#262132">
+                <rect x="104" y="158" width="56" height="56" rx="28"/>
+                <rect x="160" y="158" width="56" height="56" rx="28"/>
+              </g>
+              <!-- cheeks + beak -->
+              <ellipse cx="112" cy="222" rx="9" ry="5" fill="#ff8fa3" opacity=".4"/>
+              <ellipse cx="208" cy="222" rx="9" ry="5" fill="#ff8fa3" opacity=".4"/>
+              <path d="M160 206l-9 11 9 12 9-12z" fill="#f08a3c"/>
+              <!-- feet -->
+              <path d="M136 336v10M142 336v11M148 336v10M172 336v10M178 336v11M184 336v10" stroke="#f08a3c" stroke-width="5" stroke-linecap="round"/>
+            </g>
+          </svg>
+          <figcaption class="scene-hint" data-i18n="scene.hint">Psst… click the owl for a data tip.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 2. SKILLS -->
+    <section class="section" id="skills" aria-labelledby="skills-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="skills-title" data-i18n="skills.title">What's in my nest</h2>
+          <p class="section-intro" data-i18n="skills.intro">How I approach data work, from raw ingestion all the way to the report and the AI on top.</p>
+        </div>
+        <div class="skills-grid">
+          <article class="skill-group">
+            <svg class="skill-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5zM3 13l9 5 9-5M3 17.5l9 5 9-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+            <h3 data-i18n="skills.architecture">Architecture</h3>
+            <ul class="pills"><li dir="auto" data-i18n="sk.lakehouse">Lakehouse architecture</li><li dir="auto" data-i18n="sk.medallion">Raw → clean → business-ready layers</li><li dir="auto" data-i18n="sk.dwh">Data warehouse design</li><li dir="auto" data-i18n="sk.cloud">Cloud data platforms</li><li dir="auto" data-i18n="sk.access">Central governance &amp; access control</li></ul>
+          </article>
+          <article class="skill-group">
+            <svg class="skill-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="6" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="19" cy="18" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7.5 6H14a3 3 0 0 1 3 3v6.5M5 8.5V15a3 3 0 0 0 3 3h8.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+            <h3 data-i18n="skills.engineering">Engineering</h3>
+            <ul class="pills"><li dir="auto" data-i18n="sk.ingest">Batch &amp; streaming ingestion</li><li dir="auto" data-i18n="sk.incremental">Incremental loading</li><li dir="auto" data-i18n="sk.upsert">Upserts &amp; change handling</li><li dir="auto" data-i18n="sk.etl">ETL / ELT design</li><li dir="auto" data-i18n="sk.migration">Data migration</li><li dir="auto" data-i18n="sk.automation">Workflow automation</li></ul>
+          </article>
+          <article class="skill-group">
+            <svg class="skill-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 14.6 9l6 .6-4.5 4 1.3 5.9L12 16.6l-5.4 2.9 1.3-5.9-4.5-4 6-.6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+            <h3 data-i18n="skills.modeling">Modeling</h3>
+            <ul class="pills"><li dir="auto" data-i18n="sk.star">Star schema (Kimball)</li><li dir="auto" data-i18n="sk.factdim">Fact &amp; dimension design</li><li dir="auto" data-i18n="sk.grain">Choosing the right grain</li><li dir="auto" data-i18n="sk.calendar">Business calendars</li></ul>
+          </article>
+          <article class="skill-group">
+            <svg class="skill-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8 7.5 9.5 4.3-1.5 7.5-4.9 7.5-9.5V6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m8.8 12 2.3 2.3 4.2-4.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <h3 data-i18n="skills.quality">Data quality &amp; governance</h3>
+            <ul class="pills"><li dir="auto" data-i18n="sk.recon">Source-to-target reconciliation</li><li dir="auto" data-i18n="sk.dq">Automated data-quality checks</li><li dir="auto" data-i18n="sk.rca">Root cause analysis</li><li dir="auto" data-i18n="sk.mdm">Master &amp; metadata management</li><li dir="auto" data-i18n="sk.pdpl">PDPL masking</li></ul>
+          </article>
+          <article class="skill-group">
+            <svg class="skill-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.7M20 4v4.7h-4.7M20 12a8 8 0 0 1-13.7 5.6L4 15.3M4 20v-4.7h4.7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <h3 data-i18n="skills.devops">DevOps</h3>
+            <ul class="pills"><li dir="auto" data-i18n="sk.vc">Version control</li><li dir="auto" data-i18n="sk.cicd">CI/CD</li><li dir="auto" data-i18n="sk.devprod">Dev → Prod releases</li><li dir="auto" data-i18n="sk.alerts">Automated failure alerts</li></ul>
+          </article>
+          <article class="skill-group">
+            <svg class="skill-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <h3 data-i18n="skills.bi">Analytics &amp; BI</h3>
+            <ul class="pills"><li dir="auto" data-i18n="sk.dash">Self-service dashboards</li><li dir="auto" data-i18n="sk.kpi">KPI design</li><li dir="auto" data-i18n="sk.nlq">Natural-language Q&amp;A on data</li><li dir="auto" data-i18n="sk.bench">Market benchmarking</li></ul>
+          </article>
+          <article class="skill-group skill-ai">
+            <svg class="skill-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c.6 4.2 2.8 6.4 7 7-4.2.6-6.4 2.8-7 7-.6-4.2-2.8-6.4-7-7 4.2-.6 6.4-2.8 7-7zM19 16c.3 1.8 1.2 2.7 3 3-1.8.3-2.7 1.2-3 3-.3-1.8-1.2-2.7-3-3 1.8-.3 2.7-1.2 3-3z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+            <h3 data-i18n="skills.ai">AI &amp; ML</h3>
+            <ul class="pills"><li dir="auto" data-i18n="sk.cpmai">Managing AI projects</li><li dir="auto" data-i18n="sk.dl">Deep learning</li><li dir="auto" data-i18n="sk.sentiment">Sentiment analysis &amp; recommenders</li><li dir="auto" data-i18n="sk.aidata">AI-ready data</li><li dir="auto" data-i18n="sk.privacy">Privacy by design</li></ul>
+          </article>
+          <article class="skill-group">
+            <svg class="skill-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="9.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+            <h3 data-i18n="skills.domain">Saudi domain know-how</h3>
+            <ul class="pills"><li dir="auto" data-i18n="sk.sama">SAMA data</li><li dir="auto" data-i18n="sk.fincrime">Financial crime &amp; forensic analytics</li><li dir="auto" data-i18n="sk.ar">Accounts receivable reporting</li><li dir="auto" data-i18n="sk.procure">Procurement analytics</li><li dir="auto" data-i18n="sk.vat">VAT</li><li dir="auto" data-i18n="sk.saudical">Saudi calendar (Ramadan, White Friday, National Day)</li><li dir="auto" data-i18n="sk.shariah">Shariah finance products</li></ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. PROJECTS (rendered from projects.json by app.js) -->
+    <section class="section section-alt" id="projects" aria-labelledby="projects-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="projects-title" data-i18n="projects.title">Projects</h2>
+          <p class="section-intro" data-i18n="projects.intro">Each case study shows the business problem, my approach and the result, with the code and a step-by-step guide so you can build it yourself.</p>
+        </div>
+        <div id="project-filters" class="filters" role="group" hidden></div>
+        <div id="project-status" class="status" role="status" aria-live="polite">
+          <p data-i18n="projects.loading">Loading projects…</p>
+        </div>
+        <div id="project-list" class="project-grid"></div>
+        <noscript>
+          <p class="notice">Project case studies need JavaScript to display. You can browse all of them on
+            <a href="https://github.com/alqahysa">GitHub</a>.</p>
+        </noscript>
+      </div>
+    </section>
+
+    <!-- 4. ABOUT + CONTACT -->
+    <section class="section" id="about" aria-labelledby="about-title">
+      <div class="container about-grid">
+        <div class="about-text">
+          <h2 id="about-title" data-i18n="about.title">Hi, I'm Sarah</h2>
+          <p data-i18n="about.p1">I'm a data engineer and a curious AI enthusiast based in Dhahran. For about seven years I've been turning messy source data into things people can trust: warehouses, ETL pipelines, reconciliations and dashboards.</p>
+          <p data-i18n="about.p2">My favourite part is the bit most people skip: matching source to target, writing automated quality checks, and tracing every odd number back to its root cause. I sharpened that on financial-crime and forensic work at Deloitte, and before that by building an accounts-receivable warehouse from scratch, including a full database migration and automated monthly reporting for every business unit.</p>
+          <p data-i18n="about.p3">These days I build cloud lakehouses end to end and keep one eye on AI: my MSc thesis was a sentiment-based recommender system, and I'm certified in managing AI projects. I also enjoy explaining a tricky design in plain words, in Arabic or English.</p>
+
+          <ul class="owl-facts">
+            <li><strong>7</strong><span data-i18n="facts.years">years with data</span></li>
+            <li><strong>8</strong><span data-i18n="facts.certs">certifications</span></li>
+            <li><strong>MSc</strong><span data-i18n="facts.msc">Big Data &amp; Cloud Computing</span></li>
+            <li><strong>2</strong><span data-i18n="facts.langs">languages: Arabic &amp; English</span></li>
+          </ul>
+
+          <h3 class="cert-title" data-i18n="about.certs">Certifications</h3>
+          <ul class="pills certs">
+            <li dir="auto">Microsoft Fabric Data Engineer (DP-700)</li>
+            <li dir="auto">CDMP · DAMA</li>
+            <li dir="auto">PMI-CPMAI</li>
+            <li dir="auto">PMP</li>
+            <li dir="auto">IBM AI Engineering</li>
+            <li dir="auto">Power BI Data Analyst</li>
+            <li dir="auto">Udacity Data Architect</li>
+            <li dir="auto">Certified KPI Professional</li>
+          </ul>
+        </div>
+
+        <section class="contact-card" id="contact" aria-labelledby="contact-title">
+          <svg class="contact-owl" aria-hidden="true"><use href="#owl-mini"/></svg>
+          <h2 id="contact-title" data-i18n="contact.title">Say hoo-llo</h2>
+          <p data-i18n="contact.body">Open to data and AI engineering roles, projects and good conversations. Email is the fastest way to reach me.</p>
+          <ul class="contact-list">
+            <li><span class="contact-label" data-i18n="cta.email">Email</span>
+              <a href="mailto:sarah.alqahtani00@gmail.com" dir="ltr">sarah.alqahtani00@gmail.com</a></li>
+            <li><span class="contact-label" data-i18n="cta.linkedin">LinkedIn</span>
+              <a href="https://www.linkedin.com/in/sarahalqahtani90/" rel="me noopener" target="_blank" dir="ltr">linkedin.com/in/sarahalqahtani90</a></li>
+            <li><span class="contact-label" data-i18n="cta.github">GitHub</span>
+              <a href="https://github.com/alqahysa" rel="me noopener" target="_blank" dir="ltr">github.com/alqahysa</a></li>
+          </ul>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>© <span id="year">2026</span> <span data-i18n="name">Sarah A. AlQahtani</span></p>
+      <p class="muted" data-i18n="footer.built">Built with plain HTML, CSS, JavaScript and one night owl. Hosted on GitHub Pages.</p>
+    </div>
+  </footer>
+</body>
+</html>
