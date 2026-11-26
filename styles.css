@@ -319,6 +319,24 @@ nav { margin-inline-start: auto; }
 .card-links { display: flex; flex-wrap: wrap; gap: .6rem; margin-block-start: auto; padding-block-start: .5rem; }
 .card-links .btn { min-height: 2.6rem; font-size: .95rem; }
 
+/* approach strip: owl + the project's method as illustrated stops */
+.cover-approach { justify-content: flex-start; padding-inline: 1rem 1.2rem; gap: .4rem; }
+.cover-approach .cover-owl { position: static; flex: none; width: 3.6rem; height: 3.6rem; align-self: flex-end; margin-block-end: .9rem; }
+.approach { list-style: none; margin: 0; padding: 0; flex: 1; min-width: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); align-items: start; }
+.approach .stop { position: relative; display: grid; justify-items: center; gap: .45rem; text-align: center; padding-inline: .15rem; }
+.approach .stop:not(.last)::after {
+  content: ""; position: absolute; top: 1.3rem; inset-inline-start: calc(50% + 1.5rem); inset-inline-end: calc(-50% + 1.5rem);
+  border-top: 3px dotted var(--gold);
+}
+.approach .stop-orb {
+  display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 50%;
+  background: rgb(255 255 255 / 10%); color: #fff; box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 30%);
+}
+.approach .stop-orb svg { width: 1.3rem; height: 1.3rem; }
+.approach .last .stop-orb { background: radial-gradient(circle at 35% 35%, #fff0b8, #f5b83d); color: #261800; box-shadow: 0 0 18px rgb(245 184 61 / 55%); }
+.approach .stop-label { color: #ece9f5; font-size: .78rem; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+@media (max-width: 420px) { .cover-approach .cover-owl { width: 2.8rem; height: 2.8rem; } .approach .stop-orb { width: 2.2rem; height: 2.2rem; } .approach .stop:not(.last)::after { top: 1.1rem; } .approach .stop-label { font-size: .72rem; } }
+
 /* ---------- About / contact ---------- */
 .about-grid { display: grid; gap: 2rem; }
 @media (min-width: 900px) { .about-grid { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); align-items: start; } }
@@ -360,4 +378,20 @@ nav { margin-inline-start: auto; }
   .site-header, .skip-link, .filters, .cta-row, .hero-scene { display: none !important; }
   .section-alt { background: none; }
   .card { box-shadow: none; break-inside: avoid; }
+}
+/* approach header: the moon moves to the owl's corner so it never sits behind a stop */
+.card-cover.cover-approach {
+  background:
+    radial-gradient(circle at 5% 20%, rgb(255 243 209 / 85%) 0 .8rem, rgb(255 243 209 / 16%) .9rem 1.7rem, transparent 1.8rem),
+    radial-gradient(1.2px 1.2px at 30% 18%, #fff 50%, transparent), radial-gradient(1px 1px at 52% 12%, #fff 50%, transparent),
+    radial-gradient(1.4px 1.4px at 74% 22%, #fff 50%, transparent), radial-gradient(1px 1px at 92% 14%, #fff 50%, transparent),
+    radial-gradient(1px 1px at 64% 88%, #fff 50%, transparent),
+    linear-gradient(160deg, #1f1846, #3b2b7d);
+}
+:root[dir="rtl"] .card-cover.cover-approach {
+  background:
+    radial-gradient(circle at 95% 20%, rgb(255 243 209 / 85%) 0 .8rem, rgb(255 243 209 / 16%) .9rem 1.7rem, transparent 1.8rem),
+    radial-gradient(1.2px 1.2px at 70% 18%, #fff 50%, transparent), radial-gradient(1px 1px at 48% 12%, #fff 50%, transparent),
+    radial-gradient(1.4px 1.4px at 26% 22%, #fff 50%, transparent), radial-gradient(1px 1px at 8% 14%, #fff 50%, transparent),
+    linear-gradient(200deg, #1f1846, #3b2b7d);
 }

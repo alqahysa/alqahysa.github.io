@@ -66,7 +66,7 @@
       'filter.label': 'Filter projects', 'filter.all': 'All',
       'card.featured': 'Featured', 'card.problem': 'Problem', 'card.decisions': 'Approach',
       'card.result': 'Result',
-      'card.repo': 'Code repo', 'card.guide': 'Step-by-step guide', 'card.demo': 'Live demo',
+      'card.repo': 'Code repo', 'card.guide': 'Do it yourself', 'card.demo': 'Live demo',
       
       'about.title': "Hi, I'm Sarah",
       'about.p1': "I'm a data engineer and a curious AI enthusiast based in Dhahran. For about seven years I've been turning messy source data into things people can trust: warehouses, ETL pipelines, reconciliations and dashboards.",
@@ -138,7 +138,7 @@
       'filter.label': 'تصفية المشاريع', 'filter.all': 'الكل',
       'card.featured': 'مميّز', 'card.problem': 'المشكلة', 'card.decisions': 'المنهجية',
       'card.result': 'النتيجة',
-      'card.repo': 'مستودع الكود', 'card.guide': 'الدليل خطوة بخطوة', 'card.demo': 'عرض حي',
+      'card.repo': 'مستودع الكود', 'card.guide': 'طبّقها بنفسك', 'card.demo': 'عرض حي',
       
       'about.title': 'أهلًا، أنا سارة',
       'about.p1': 'مهندسة بيانات وشغوفة بالذكاء الاصطناعي، مقيمة في الظهران. منذ نحو سبع سنوات وأنا أحوّل بيانات المصادر الفوضوية إلى شيء يثق به الناس: مستودعات بيانات وخطوط ETL ومطابقات ولوحات معلومات.',
@@ -477,6 +477,51 @@
       return [1, 2, 3, 4].map(function (i) { return el('span', { className: 'bar bar' + i }); });
     }
   };
+  /* Approach strip: the project's method as 2–4 illustrated stops, with the owl at the start. */
+  var COVER_ICONS = {
+    files: 'M7 3h7l4 4v12H7zM14 3v4h4M4 7v14h11',
+    clean: 'M12 3c.6 4.2 2.8 6.4 7 7-4.2.6-6.4 2.8-7 7-.6-4.2-2.8-6.4-7-7 4.2-.6 6.4-2.8 7-7z',
+    merge: 'M6 3v6a6 6 0 0 0 6 6h6M18 15l-3-3M18 15l-3 3M6 21v-6',
+    star: 'M12 3.5 14.6 9l6 .6-4.5 4 1.3 5.9L12 16.6l-5.4 2.9 1.3-5.9-4.5-4 6-.6z',
+    benchmark: 'M3 20h18M4 16l5-5 4 3 7-7M15 7h5v5',
+    chart: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
+    stream: 'M3 8c3-3 6 3 9 0s6 3 9 0M3 14c3-3 6 3 9 0s6 3 9 0',
+    mask: 'M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6zM4 4l16 16',
+    flag: 'M5 21V4h11l-2 4 2 4H5',
+    ai: 'M12 3c.6 4.2 2.8 6.4 7 7-4.2.6-6.4 2.8-7 7-.6-4.2-2.8-6.4-7-7 4.2-.6 6.4-2.8 7-7zM19 16c.3 1.8 1.2 2.7 3 3-1.8.3-2.7 1.2-3 3-.3-1.8-1.2-2.7-3-3 1.8-.3 2.7-1.2 3-3z',
+    shield: 'M12 3 4.5 6v5.5c0 4.6 3.2 8 7.5 9.5 4.3-1.5 7.5-4.9 7.5-9.5V6zM8.8 12l2.3 2.3 4.2-4.6',
+    calendar: 'M4 6h16v14H4zM4 10h16M9 3v5M15 3v5',
+    alert: 'M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4',
+    database: 'M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zM4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3',
+    model: 'M12 3a5 5 0 0 0-5 5v1a4 4 0 0 0 0 8h1a4 4 0 0 0 8 0h1a4 4 0 0 0 0-8V8a5 5 0 0 0-5-5z',
+    rocket: 'M5 15c-1.5 1.5-2 5-2 5s3.5-.5 5-2M9 13l-2-2c1.5-5 6-8 13-8 0 7-3 11.5-8 13l-2-2'
+  };
+  function coverIcon(name) {
+    var svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('aria-hidden', 'true');
+    var path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('d', COVER_ICONS[name] || COVER_ICONS.database);
+    path.setAttribute('fill', 'none'); path.setAttribute('stroke', 'currentColor'); path.setAttribute('stroke-width', '1.9');
+    path.setAttribute('stroke-linecap', 'round'); path.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(path);
+    return svg;
+  }
+  function approachCover(p) {
+    var steps = (Array.isArray(p.cover_steps) ? p.cover_steps : []).filter(function (c) { return c && isNonEmptyString(c.label); }).slice(0, 4);
+    if (steps.length < 2) return null;
+    var list = el('ol', { className: 'approach' }, steps.map(function (c, i) {
+      var label = state.lang === 'ar' && isNonEmptyString(c.label_ar) ? c.label_ar : c.label;
+      return el('li', { className: 'stop' + (i === steps.length - 1 ? ' last' : '') }, [
+        el('span', { className: 'stop-orb' }, [coverIcon(c.icon)]),
+        el('span', { className: 'stop-label', text: label })
+      ]);
+    }));
+    var title = state.lang === 'ar' ? 'المنهجية: ' : 'Approach: ';
+    return el('div', { className: 'card-cover cover-approach', role: 'img',
+      'aria-label': title + steps.map(function (c) { return state.lang === 'ar' && c.label_ar ? c.label_ar : c.label; }).join(' → ') }, [
+      owlIcon('owl-mini', 'cover-owl'), list
+    ]);
+  }
   function coverKind(p) {
     var c = (isNonEmptyString(p.category) ? p.category : '').toLowerCase();
     if (/\bai\b|machine|ml|genai|llm|intelligence/.test(c)) return 'ai';
@@ -497,7 +542,7 @@
     var demo = safeUrl(p.demo_url);
     var kind = coverKind(p);
 
-    var cover = el('div', { className: 'card-cover cover-' + kind, 'aria-hidden': 'true' },
+    var cover = approachCover(p) || el('div', { className: 'card-cover cover-' + kind, 'aria-hidden': 'true' },
       [el('div', { className: 'cover-art' }, COVER_ART[kind]()), owlIcon('owl-mini', 'cover-owl')]);
 
     var meta = el('div', { className: 'card-meta' }, [

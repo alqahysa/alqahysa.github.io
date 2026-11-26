@@ -160,30 +160,6 @@
    }
   ]
  },
- "intro": [
-  {
-   "type": "p",
-   "segs": [
-    {
-     "t": "This guide builds a 30-day re-delinquency pipeline for Najd National Bank, a fictional Saudi retail bank, on Azure Databricks. It follows the 16 steps of the healthcare readmissions reference project, in the same order, with the same tools. You start from an empty repo: each step adds only its own files and ends with a commit. Replace "
-    },
-    {
-     "t": "<storage-account>",
-     "c": 1
-    },
-    {
-     "t": " and "
-    },
-    {
-     "t": "<workspace-host>",
-     "c": 1
-    },
-    {
-     "t": " everywhere."
-    }
-   ]
-  }
- ],
  "steps": [
   {
    "id": "step-1",
@@ -193,18 +169,6 @@
    "tip": "Get a worked example signed off (cured 12 July, missed 27 July = re-delinquent) before writing any code.",
    "tip_ar": "اعتمد مثالًا محلولًا (انتظم 12 يوليو وتعثّر 27 يوليو = تكرار تعثّر) قبل كتابة أي كود.",
    "blocks": [
-    {
-     "type": "p",
-     "segs": [
-      {
-       "t": "Purpose:",
-       "b": 1
-      },
-      {
-       "t": " agree in writing what the business wants before any resource is built."
-      }
-     ]
-    },
     {
      "type": "h",
      "level": 3,
@@ -331,6 +295,13 @@
       }
      ]
     }
+   ],
+   "goal": "Agree in writing what the business wants before any resource is built.",
+   "goal_ar": "اتفق كتابيًا على ما يريده العمل قبل إنشاء أي مورد.",
+   "creates": [
+    "3 business goals",
+    "30-day definition",
+    "sign-off"
    ]
   },
   {
@@ -341,18 +312,6 @@
    "tip": "Say the grain out loud. Everything else in the model follows from it.",
    "tip_ar": "صرّح بمستوى التفصيل بوضوح؛ فكل ما في النموذج ينبع منه.",
    "blocks": [
-    {
-     "type": "p",
-     "segs": [
-      {
-       "t": "Purpose:",
-       "b": 1
-      },
-      {
-       "t": " turn the business process into a star schema with one clear grain."
-      }
-     ]
-    },
     {
      "type": "h",
      "level": 3,
@@ -874,6 +833,15 @@
       }
      ]
     }
+   ],
+   "goal": "Turn the business process into a star schema with one clear grain.",
+   "goal_ar": "حوّل عملية العمل إلى نموذج نجمي بمستوى تفصيل واحد واضح.",
+   "creates": [
+    "dim_customer",
+    "dim_branch",
+    "dim_product",
+    "fact_repayment",
+    "agg_redelinquency_branch_product"
    ]
   },
   {
@@ -884,18 +852,6 @@
    "tip": "Draw who consumes the result, not only where the data flows.",
    "tip_ar": "ارسم من سيستخدم النتيجة، لا مسار البيانات فقط.",
    "blocks": [
-    {
-     "type": "p",
-     "segs": [
-      {
-       "t": "Purpose:",
-       "b": 1
-      },
-      {
-       "t": " fix where data comes from, where each layer lives, and who consumes the result."
-      }
-     ]
-    },
     {
      "type": "diagram",
      "diagram": {
@@ -1165,6 +1121,11 @@
       }
      ]
     }
+   ],
+   "goal": "Fix where data comes from, where each layer lives, and who consumes the result.",
+   "goal_ar": "حدّد مصدر البيانات وموقع كل طبقة ومن سيستخدم النتيجة.",
+   "creates": [
+    "architecture diagram"
    ]
   },
   {
@@ -1175,18 +1136,6 @@
    "tip": "Pick one compliant region and put every resource in it.",
    "tip_ar": "اختر منطقة واحدة متوافقة وضع فيها كل الموارد.",
    "blocks": [
-    {
-     "type": "p",
-     "segs": [
-      {
-       "t": "Purpose:",
-       "b": 1
-      },
-      {
-       "t": " create the storage and the Databricks workspace that everything else runs on."
-      }
-     ]
-    },
     {
      "type": "p",
      "segs": [
@@ -1443,6 +1392,12 @@
       }
      ]
     }
+   ],
+   "goal": "Create the storage and the Databricks workspace that everything else runs on.",
+   "goal_ar": "أنشئ التخزين ومساحة عمل Databricks التي يعمل عليها كل شيء.",
+   "creates": [
+    "ADLS Gen2 account",
+    "Databricks workspace"
    ]
   },
   {
@@ -1453,18 +1408,6 @@
    "tip": "Paste the access connector's full Resource ID, not just its name.",
    "tip_ar": "الصق معرّف المورد الكامل لموصل الوصول، لا اسمه فقط.",
    "blocks": [
-    {
-     "type": "p",
-     "segs": [
-      {
-       "t": "Purpose:",
-       "b": 1
-      },
-      {
-       "t": " give Databricks a managed identity that can reach the storage, and a metastore that governs every table."
-      }
-     ]
-    },
     {
      "type": "h",
      "level": 3,
@@ -1842,6 +1785,12 @@
      "lang": "sql",
      "text": "SELECT current_metastore();"
     }
+   ],
+   "goal": "Give Databricks a managed identity that can reach the storage, and a metastore that governs every table.",
+   "goal_ar": "امنح Databricks هوية مُدارة تصل إلى التخزين، وmetastore يحكم كل جدول.",
+   "creates": [
+    "access connector",
+    "Unity Catalog metastore"
    ]
   },
   {
@@ -1852,25 +1801,6 @@
    "tip": "“Overlaps with managed storage”? Skip that location: the metastore already governs it.",
    "tip_ar": "ظهرت رسالة تداخل مع التخزين المُدار؟ تجاوز ذلك الموقع، فالـ metastore يحكمه أصلًا.",
    "blocks": [
-    {
-     "type": "p",
-     "segs": [
-      {
-       "t": "Purpose:",
-       "b": 1
-      },
-      {
-       "t": " tell Unity Catalog which storage paths it may use, then create the "
-      },
-      {
-       "t": "banking",
-       "c": 1
-      },
-      {
-       "t": " catalog and its medallion schemas."
-      }
-     ]
-    },
     {
      "type": "h",
      "level": 3,
@@ -2343,6 +2273,14 @@
      "lang": "sql",
      "text": "SHOW EXTERNAL LOCATIONS;          -- 3 rows\nSHOW SCHEMAS IN banking;          -- bronze, default, gold, information_schema, silver"
     }
+   ],
+   "goal": "Tell Unity Catalog which storage paths it may use, then create the banking catalog and its schemas.",
+   "goal_ar": "أخبر Unity Catalog بمسارات التخزين المسموح بها، ثم أنشئ كتالوج banking ومخططاته.",
+   "creates": [
+    "najd_banking_cred",
+    "ext_data",
+    "ext_catalog_location",
+    "banking.bronze / silver / gold"
    ]
   },
   {
@@ -2353,25 +2291,6 @@
    "tip": "Break it on purpose once. Seeing the permission error now saves hours later.",
    "tip_ar": "عطّله عمدًا مرة واحدة؛ رؤية خطأ الصلاحيات الآن توفّر ساعات لاحقًا.",
    "blocks": [
-    {
-     "type": "p",
-     "segs": [
-      {
-       "t": "Purpose:",
-       "b": 1
-      },
-      {
-       "t": " prove Databricks can write and read the "
-      },
-      {
-       "t": "data",
-       "c": 1
-      },
-      {
-       "t": " container, and learn what a missing external location looks like."
-      }
-     ]
-    },
     {
      "type": "h",
      "level": 3,
@@ -2640,6 +2559,11 @@
       }
      ]
     }
+   ],
+   "goal": "Prove Databricks can write and read the data container, and learn what a missing external location looks like.",
+   "goal_ar": "أثبت أن Databricks يكتب ويقرأ من حاوية البيانات، وتعرّف على شكل الخطأ عند غياب الموقع الخارجي.",
+   "creates": [
+    "00_connectivity_test"
    ]
   },
   {
@@ -2650,18 +2574,6 @@
    "tip": "Land files exactly where a real extract would drop them, so nothing downstream changes in production.",
    "tip_ar": "ضع الملفات حيث يضعها الاستخراج الحقيقي تمامًا، فلا يتغير شيء لاحقًا في الإنتاج.",
    "blocks": [
-    {
-     "type": "p",
-     "segs": [
-      {
-       "t": "Purpose:",
-       "b": 1
-      },
-      {
-       "t": " put the code under Git and land raw CSV feeds where an upstream extraction service would drop them."
-      }
-     ]
-    },
     {
      "type": "h",
      "level": 3,
@@ -3526,6 +3438,14 @@
       }
      ]
     }
+   ],
+   "goal": "Put the code under Git and land raw CSV feeds where an upstream extract would drop them.",
+   "goal_ar": "ضع الكود تحت Git، وأنزل ملفات CSV الخام حيث يضعها الاستخراج الحقيقي.",
+   "creates": [
+    "Git folder",
+    "feature/initial-pipeline",
+    "raw_data/*.csv",
+    "data/staging/"
    ]
   },
   {
@@ -3536,18 +3456,6 @@
    "tip": "Auto Loader remembers what it has read: rerunning never reloads old files.",
    "tip_ar": "يتذكر Auto Loader ما قرأه، فإعادة التشغيل لا تعيد تحميل الملفات القديمة.",
    "blocks": [
-    {
-     "type": "p",
-     "segs": [
-      {
-       "t": "Purpose:",
-       "b": 1
-      },
-      {
-       "t": " load each staging feed, incrementally and as-is, into a bronze Delta table."
-      }
-     ]
-    },
     {
      "type": "h",
      "level": 3,
@@ -3901,6 +3809,15 @@
      "lang": "sql",
      "text": "SELECT 'cbs_customer' AS t, COUNT(*) FROM banking.bronze.cbs_customer  UNION ALL\nSELECT 'cbs_branch',        COUNT(*) FROM banking.bronze.cbs_branch    UNION ALL\nSELECT 'cbs_product',       COUNT(*) FROM banking.bronze.cbs_product   UNION ALL\nSELECT 'cbs_repayment',     COUNT(*) FROM banking.bronze.cbs_repayment;\n-- expected: 20, 15, 15, 30. A second run adds 0 rows."
     }
+   ],
+   "goal": "Load each staging feed, incrementally and as-is, into a bronze Delta table.",
+   "goal_ar": "حمّل كل ملف من منطقة التجهيز، تزايديًا وكما هو، إلى جدول Delta في Bronze.",
+   "creates": [
+    "4 ingestion notebooks",
+    "cbs_customer",
+    "cbs_branch",
+    "cbs_product",
+    "cbs_repayment"
    ]
   },
   {
@@ -3911,18 +3828,6 @@
    "tip": "Mask in silver: analysts need patterns, not names or ID numbers.",
    "tip_ar": "أخفِ البيانات في Silver؛ المحللون يحتاجون الأنماط لا الأسماء ولا أرقام الهوية.",
    "blocks": [
-    {
-     "type": "p",
-     "segs": [
-      {
-       "t": "Purpose:",
-       "b": 1
-      },
-      {
-       "t": " clean, de-duplicate and mask the bronze data, then MERGE it into conformed Delta dimensions and one wide fact table."
-      }
-     ]
-    },
     {
      "type": "p",
      "segs": [
@@ -4360,6 +4265,14 @@
      "lang": "sql",
      "text": "SELECT COUNT(*) FROM banking.silver.dim_customer;    -- 20\nSELECT COUNT(*) FROM banking.silver.dim_branch;      -- 15, then 16 after action 6 (BR016 added)\nSELECT COUNT(*) FROM banking.silver.dim_product;     -- 15 (still 15 after action 6)\nSELECT COUNT(*) FROM banking.silver.fact_repayment;  -- 30\n\nSELECT product_code, product_desc, load_timestamp\nFROM banking.silver.dim_product WHERE product_code = 'HF02';\n-- after action 6: \"Home Finance - Off-Plan (Wafi Programme)\" with a newer load_timestamp\n\nSELECT customer_id, first_name, last_name, national_id_or_iqama\nFROM banking.silver.dim_customer LIMIT 3;   -- A***, A***, ******3671\n\nDESCRIBE HISTORY banking.silver.dim_product;  -- latest operation = MERGE"
     }
+   ],
+   "goal": "Clean, de-duplicate and mask the bronze data, then MERGE it into conformed dimensions and one wide fact.",
+   "goal_ar": "نظّف بيانات Bronze وأزل التكرار وأخفِ البيانات الشخصية، ثم ادمجها بـ MERGE في أبعاد موحّدة وجدول حقائق واحد.",
+   "creates": [
+    "dim_customer",
+    "dim_branch",
+    "dim_product",
+    "fact_repayment"
    ]
   },
   {
@@ -4370,18 +4283,6 @@
    "tip": "Test the 30-day flag on the worked example from Step 1 before you trust the totals.",
    "tip_ar": "اختبر علامة الـ 30 يومًا على مثال الخطوة 1 قبل أن تثق بالإجماليات.",
    "blocks": [
-    {
-     "type": "p",
-     "segs": [
-      {
-       "t": "Purpose:",
-       "b": 1
-      },
-      {
-       "t": " flag every 30-day re-delinquency and aggregate it into a branch × product KPI table the business can query."
-      }
-     ]
-    },
     {
      "type": "h",
      "level": 3,
@@ -4621,6 +4522,13 @@
      "lang": "sql",
      "text": "SELECT SUM(total_events), SUM(total_redelinquencies) FROM banking.gold.agg_redelinquency_branch_product;  -- 30, 8\n\nSELECT event_id FROM banking.gold.fact_redelinquency_event\nWHERE redelinquency_30d_flag = 1 ORDER BY event_id;\n-- EVT0002, EVT0005, EVT0006, EVT0008, EVT0010, EVT0015, EVT0021, EVT0025"
     }
+   ],
+   "goal": "Flag every 30-day re-delinquency and aggregate it into a branch × product KPI table.",
+   "goal_ar": "علّم كل حالة تكرار تعثّر خلال 30 يومًا، واجمعها في جدول مؤشرات حسب الفرع والمنتج.",
+   "creates": [
+    "redelinquency_analysis",
+    "fact_redelinquency_event",
+    "agg_redelinquency_branch_product"
    ]
   },
   {
@@ -4631,18 +4539,6 @@
    "tip": "Let independent tasks run in parallel; only the fact waits for every dimension.",
    "tip_ar": "دع المهام المستقلة تعمل بالتوازي؛ جدول الحقائق وحده ينتظر كل الأبعاد.",
    "blocks": [
-    {
-     "type": "p",
-     "segs": [
-      {
-       "t": "Purpose:",
-       "b": 1
-      },
-      {
-       "t": " run the nine notebooks as one dependency-aware pipeline on serverless compute."
-      }
-     ]
-    },
     {
      "type": "h",
      "level": 3,
@@ -5233,6 +5129,12 @@
       }
      ]
     }
+   ],
+   "goal": "Run the nine notebooks as one dependency-aware pipeline on serverless compute.",
+   "goal_ar": "شغّل الدفاتر التسعة كخط واحد يراعي الاعتماديات على حوسبة serverless.",
+   "creates": [
+    "banking_end_to_end_job",
+    "9 tasks"
    ]
   },
   {
@@ -5243,18 +5145,6 @@
    "tip": "Keep notebook path extensions identical to what Git stores (.py or .ipynb).",
    "tip_ar": "اجعل امتدادات مسارات الدفاتر مطابقة لما يحفظه Git (‎.py أو ‎.ipynb).",
    "blocks": [
-    {
-     "type": "p",
-     "segs": [
-      {
-       "t": "Purpose:",
-       "b": 1
-      },
-      {
-       "t": " define the job as code so the same pipeline deploys to dev and prod from Git."
-      }
-     ]
-    },
     {
      "type": "h",
      "level": 3,
@@ -6077,6 +5967,13 @@
       }
      ]
     }
+   ],
+   "goal": "Define the job as code so the same pipeline deploys to dev and prod from Git.",
+   "goal_ar": "عرّف المهمة ككود لينتشر الخط نفسه إلى dev وprod من Git.",
+   "creates": [
+    "databricks.yml",
+    "resources/job.yml",
+    "~/.databrickscfg"
    ]
   },
   {
@@ -6087,32 +5984,6 @@
    "tip": "Keep the workspace host identical on every branch, or move it into a per-target variable.",
    "tip_ar": "أبقِ عنوان مساحة العمل نفسه في كل فرع، أو انقله إلى متغير لكل بيئة.",
    "blocks": [
-    {
-     "type": "p",
-     "segs": [
-      {
-       "t": "Purpose:",
-       "b": 1
-      },
-      {
-       "t": " deploy the bundle automatically: a merge to "
-      },
-      {
-       "t": "dev",
-       "c": 1
-      },
-      {
-       "t": " deploys dev, a merge to "
-      },
-      {
-       "t": "main",
-       "c": 1
-      },
-      {
-       "t": " deploys prod."
-      }
-     ]
-    },
     {
      "type": "h",
      "level": 3,
@@ -6742,6 +6613,14 @@
       }
      ]
     }
+   ],
+   "goal": "Deploy the bundle automatically: a merge to dev deploys dev, a merge to main deploys prod.",
+   "goal_ar": "انشر الحزمة آليًا: الدمج في dev ينشر dev، والدمج في main ينشر prod.",
+   "creates": [
+    "deploy-dev.yml",
+    "deploy-prod.yml",
+    "DATABRICKS_HOST",
+    "DATABRICKS_TOKEN"
    ]
   },
   {
@@ -6752,18 +6631,6 @@
    "tip": "Add example questions with their expected answers. That is how you test Genie.",
    "tip_ar": "أضف أسئلة نموذجية مع إجاباتها المتوقعة؛ هكذا تختبر Genie.",
    "blocks": [
-    {
-     "type": "p",
-     "segs": [
-      {
-       "t": "Purpose:",
-       "b": 1
-      },
-      {
-       "t": " let collections and risk users ask re-delinquency questions in plain English, without writing SQL."
-      }
-     ]
-    },
     {
      "type": "h",
      "level": 3,
@@ -7357,6 +7224,12 @@
       }
      ]
     }
+   ],
+   "goal": "Let collections and risk users ask re-delinquency questions in plain English, without writing SQL.",
+   "goal_ar": "مكّن فرق التحصيل والمخاطر من طرح أسئلة تكرار التعثّر بلغة عادية دون كتابة SQL.",
+   "creates": [
+    "Genie space",
+    "5 example questions"
    ]
   },
   {
@@ -7367,18 +7240,6 @@
    "tip": "Sign in as a business user to check what they really see.",
    "tip_ar": "سجّل الدخول كمستخدم أعمال لترى ما يراه فعلًا.",
    "blocks": [
-    {
-     "type": "p",
-     "segs": [
-      {
-       "t": "Purpose:",
-       "b": 1
-      },
-      {
-       "t": " give managers a published, shareable view of re-delinquency that they open from Databricks One."
-      }
-     ]
-    },
     {
      "type": "h",
      "level": 3,
@@ -7850,6 +7711,12 @@
       }
      ]
     }
+   ],
+   "goal": "Give managers a published, shareable view of re-delinquency that they open from Databricks One.",
+   "goal_ar": "امنح المدراء عرضًا منشورًا وقابلًا للمشاركة لتكرار التعثّر يفتحونه من Databricks One.",
+   "creates": [
+    "AI/BI dashboard",
+    "collections-analysts access"
    ]
   },
   {
@@ -8452,6 +8319,117 @@
        ]
       ]
      ]
+    }
+   ],
+   "goal": "Fixes for the errors you are most likely to meet along the way.",
+   "goal_ar": "حلول لأكثر الأخطاء التي قد تواجهها في الطريق.",
+   "creates": []
+  }
+ ],
+ "intro_sections": [
+  {
+   "kind": "story",
+   "title": "The story",
+   "lead": "Najd National Bank (fictional) runs personal finance, auto finance, credit cards and home finance (Murabaha, Tawarruq, Ijara) through branches from Riyadh and Jeddah to Abha and Tabuk.",
+   "text": "When a customer misses an installment, collections chase them until they are current again, and count it as a win. But many cured customers miss again within a month. Each repeat raises IFRS 9 expected credit losses and provisions, sends the same customers back to the same collectors, and draws SAMA questions the bank cannot answer today.",
+   "quote": "Which products, segments and branches keep sending customers back into arrears?",
+   "quote_by": "Head of collections",
+   "tip": "This guide follows the 16 steps of a reference end-to-end Databricks project, in the same order and with the same tools.",
+   "side": {
+    "kind": "timeline",
+    "title": "What counts as re-delinquent?",
+    "events": [
+     {
+      "label": "Missed",
+      "date": "earlier",
+      "tone": "bad"
+     },
+     {
+      "label": "Cured",
+      "date": "12 July",
+      "tone": "good"
+     },
+     {
+      "label": "Missed again",
+      "date": "27 July",
+      "tone": "bad"
+     }
+    ],
+    "bracket": "15 days ≤ 30 → flagged",
+    "caption": "A new missed installment due 0–30 days after the same customer cured the previous one on the same product."
+   }
+  },
+  {
+   "kind": "cards",
+   "title": "How this guide works",
+   "cards": [
+    {
+     "icon": "repo",
+     "tag": "Start",
+     "title": "From an empty repo",
+     "text": "You begin with nothing but a GitHub repo. Every resource, notebook and file is created along the way."
+    },
+    {
+     "icon": "commit",
+     "tag": "Rhythm",
+     "title": "One step, one commit",
+     "text": "Each step adds only its own files and ends with a commit, so your history tells the story of the build."
+    },
+    {
+     "icon": "shield",
+     "tag": "Regulated",
+     "title": "Built for a bank",
+     "text": "Data residency, Unity Catalog governance and PDPL masking are part of the build, not an afterthought."
+    }
+   ]
+  },
+  {
+   "kind": "layers",
+   "title": "The layers you'll build",
+   "items": [
+    {
+     "tone": "landing",
+     "name": "Staging",
+     "text": "Raw CSV feeds in ADLS Gen2, where a nightly core-banking extract would drop them."
+    },
+    {
+     "tone": "bronze",
+     "name": "Bronze",
+     "text": "Auto Loader ingests each feed incrementally, as-is, into banking.bronze."
+    },
+    {
+     "tone": "silver",
+     "name": "Silver",
+     "text": "De-duplicated, PDPL-masked data MERGEd into three dimensions and one wide repayment fact."
+    },
+    {
+     "tone": "gold",
+     "name": "Gold",
+     "text": "The 30-day re-delinquency flag and a branch × product KPI table."
+    },
+    {
+     "tone": "serve",
+     "name": "Serving",
+     "text": "A Genie space for plain-English questions and an AI/BI dashboard in Databricks One."
+    },
+    {
+     "tone": "ops",
+     "name": "Operations",
+     "text": "A Lakeflow Job, a Databricks Asset Bundle and GitHub Actions CI/CD from dev to prod."
+    }
+   ]
+  },
+  {
+   "kind": "legend",
+   "title": "Replace these placeholders everywhere",
+   "items": [
+    {
+     "code": "<storage-account>",
+     "text": "your ADLS Gen2 storage account name"
+    },
+    {
+     "code": "<workspace-host>",
+     "text": "your Databricks workspace URL (adb-….azuredatabricks.net)"
     }
    ]
   }

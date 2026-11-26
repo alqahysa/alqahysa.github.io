@@ -49,6 +49,12 @@ Remove the project's whole `{ ... }` block **and the comma that separated it** f
   "id": "my-new-project",
   "title": "Project title",
   "category": "Data Engineering",
+  "cover_steps": [
+    { "icon": "files", "label": "Monthly files", "label_ar": "ملفات شهرية" },
+    { "icon": "clean", "label": "Clean & reconcile", "label_ar": "تنظيف ومطابقة" },
+    { "icon": "star", "label": "Star schema", "label_ar": "نموذج نجمي" },
+    { "icon": "benchmark", "label": "Report vs market", "label_ar": "تقرير مقارن بالسوق" }
+  ],
   "tagline": "One sentence that says what it does for the business.",
   "problem": "Two or three sentences describing the business problem.",
   "highlights": [
@@ -67,20 +73,21 @@ Remove the project's whole `{ ... }` block **and the comma that separated it** f
 
 ### Field reference
 
-Every card has the same design and size: an illustrated owl cover, then **Problem → Approach → Result**, then the buttons. Cards describe the approach and the result, not the tools, so there are no tool tags, code snippets or screenshots on the cards (those belong in the repo and the guide).
+Every card has the same design and size: a night-sky header where the owl sits at the start of the project's **approach strip** (2–4 illustrated stops), then **Problem → Approach → Result**, then the buttons. Cards describe the approach and the result, not the tools, so there are no tool tags, code snippets or screenshots on the cards (those belong in the repo and the guide).
 
 | Field | Required | Notes |
 |---|---|---|
 | `id` | yes | Unique. Lowercase letters, numbers, hyphens (`retail-forecast-v2`). |
 | `title` | yes | A project without a title is skipped. Keep tool names out of it. |
 | `category` | yes | For example `Data Engineering`, `AI / Machine Learning`, `Analytics & BI`. It sets the cover drawing (pipeline, AI network or bars), and filter buttons appear automatically once there are 2+ categories. |
+| `cover_steps` | recommended | 2–4 stops for the card header, each `{ "icon", "label", "label_ar" }`. Keep labels short (up to ~24 characters). Icons: files, clean, merge, star, benchmark, chart, stream, mask, flag, ai, shield, calendar, alert, database, model, rocket. Without it, the header shows a drawing based on the category. |
 | `tagline` | recommended | One sentence. |
 | `problem` | recommended | 2–3 sentences: the business problem. |
 | `highlights` | recommended | The **Approach**: 3–4 short points on what you did and why. The card shows up to 4. |
 | `result` | recommended | One sentence, ideally with a number. |
 | `repo_url` | recommended | Must start with `https://`. Adds a **Code repo** button. |
-| `guide_url` | recommended | Link to the step-by-step guide. Adds a gold **Step-by-step guide** button. |
-| `guide_label` | optional | Custom text for the guide button (default “Step-by-step guide”). |
+| `guide_url` | recommended | Link to the step-by-step guide. Adds a gold **Do it yourself** button. |
+| `guide_label` | optional | Custom text for the guide button (default “Do it yourself”). |
 | `demo_url` | optional | Adds a "Live demo" button. |
 | `featured` | optional | `true` / `false` (no quotes). Featured projects are shown first. |
 | `order` | optional | A number (no quotes). Lower numbers show first. |

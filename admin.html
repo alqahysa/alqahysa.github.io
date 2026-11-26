@@ -137,13 +137,14 @@
         <div><label for="f-order">Order <span class="hint">(lower shows first)</span></label><input id="f-order" type="number" step="1"></div>
         <div style="align-self:end"><label class="check"><input id="f-featured" type="checkbox"> Featured</label></div>
         <div class="full"><label for="f-title">Title</label><input id="f-title" type="text" required></div>
+        <div class="full"><label for="f-cover">Card header: approach strip <span class="hint">(2–4 lines, one stop per line: <code>icon | English label | Arabic label</code>. Icons: files, clean, merge, star, benchmark, chart, stream, mask, flag, ai, shield, calendar, alert, database, model, rocket)</span></label><textarea id="f-cover" class="code" rows="4" spellcheck="false" dir="ltr" placeholder="files | Monthly files | ملفات شهرية&#10;clean | Clean &amp; reconcile | تنظيف ومطابقة&#10;star | Star schema | نموذج نجمي&#10;benchmark | Report vs market | تقرير مقارن بالسوق"></textarea></div>
         <div class="full"><label for="f-tagline">Tagline <span class="hint">(one sentence)</span></label><input id="f-tagline" type="text" required></div>
         <div class="full"><label for="f-problem">Problem <span class="hint">(2–3 sentences)</span></label><textarea id="f-problem" required></textarea></div>
         <div class="full"><label for="f-highlights">Approach <span class="hint">(one per line; up to 4 are shown; describe what you did and why, not which tool)</span></label><textarea id="f-highlights" rows="5" required></textarea></div>
         <div class="full"><label for="f-result">Result <span class="hint">(one sentence with a number: the outcome, not the tooling)</span></label><input id="f-result" type="text" required></div>
         <div class="full"><label for="f-repo">Repository URL</label><input id="f-repo" type="url" required placeholder="https://github.com/alqahysa/…"></div>
         <div class="full"><label for="f-guide">Step-by-step guide link <span class="hint">(recommended; for a guide page on this site use guide.html?p=&lt;id&gt; and add guides/&lt;id&gt;.json)</span></label><input id="f-guide" type="text" spellcheck="false" placeholder="guide.html?p=my-project"></div>
-        <div class="full"><label for="f-guide-label">Guide button text <span class="hint">(optional; default “Step-by-step guide”)</span></label><input id="f-guide-label" type="text"></div>
+        <div class="full"><label for="f-guide-label">Guide button text <span class="hint">(optional; default “Do it yourself”)</span></label><input id="f-guide-label" type="text"></div>
         <div class="full"><label for="f-demo">Demo URL <span class="hint">(optional)</span></label><input id="f-demo" type="url"></div>
       </div>
 
@@ -399,6 +400,7 @@
     });
     $('f-highlights').value = Array.isArray(p.highlights) ? p.highlights.join('\n') : (p.highlights || '');
     $('f-highlights-ar').value = Array.isArray(p.highlights_ar) ? p.highlights_ar.join('\n') : (p.highlights_ar || '');
+    $('f-cover').value = Array.isArray(p.cover_steps) ? p.cover_steps.map(function (c) { return [c.icon || '', c.label || '', c.label_ar || ''].join(' | ').replace(/\s\|\s$/, ''); }).join('\n') : '';
     $('f-featured').checked = p.featured === true;
     if (index == null) {
       var max = state.projects.reduce(function (m, x) { var o = Number(x.order); return isFinite(o) && o > m ? o : m; }, 0);
@@ -428,6 +430,16 @@
     need(/^[a-z0-9]+(-[a-z0-9]+)*$/.test(d.id), 'id is required: lowercase letters, numbers and single hyphens (e.g. my-fabric-project).', 'f-id');
     var clash = state.projects.some(function (p, i) { return i !== state.editingIndex && p.id === d.id; });
     need(!clash, 'Another project already uses the id “' + d.id + '”. Ids must be unique.', 'f-id');
+    var COVER_ICONS = 'files, clean, merge, star, benchmark, chart, stream, mask, flag, ai, shield, calendar, alert, database, model, rocket'.split(', ');
+    d.cover_steps = d.cover_raw.map(function (ln) {
+      var parts = ln.split('|').map(function (x) { return x.trim(); });
+      var o = { icon: parts[0], label: parts[1] || '' }; if (parts[2]) o.label_ar = parts[2]; return o;
+    });
+    need(d.cover_steps.length === 0 || (d.cover_steps.length >= 2 && d.cover_steps.length <= 4), 'The approach strip needs 2 to 4 lines (or leave it empty).', 'f-cover');
+    d.cover_steps.forEach(function (c, i) {
+      need(COVER_ICONS.indexOf(c.icon) !== -1, 'Approach line ' + (i + 1) + ': unknown icon “' + c.icon + '”. Use one of: ' + COVER_ICONS.join(', ') + '.', 'f-cover');
+      need(c.label.length > 0 && c.label.length <= 24, 'Approach line ' + (i + 1) + ': add an English label of up to 24 characters.', 'f-cover');
+    });
     need(d.title.length > 0, 'Title is required.', 'f-title');
     need(d.title.length <= 140, 'Title is too long (max 140 characters).', 'f-title');
     need(d.tagline.length > 0, 'Tagline is required.', 'f-tagline');
@@ -455,6 +467,7 @@
       repo_url: $('f-repo').value.trim(), guide_url: $('f-guide').value.trim(), guide_label: $('f-guide-label').value.trim(),
       category: $('f-category').value.trim(), category_ar: $('f-category-ar').value.trim(), guide_label_ar: $('f-guide-label-ar').value.trim(), demo_url: $('f-demo').value.trim(),
       order: $('f-order').value.trim(), featured: $('f-featured').checked,
+      cover_raw: lines($('f-cover').value),
       title_ar: $('f-title-ar').value.trim(), tagline_ar: $('f-tagline-ar').value.trim(), problem_ar: $('f-problem-ar').value.trim(),
       highlights_ar: lines($('f-highlights-ar').value), result_ar: $('f-result-ar').value.trim()
     };
@@ -471,7 +484,7 @@
     // Start from the existing object so any extra fields you added by hand are kept.
     var base = state.editingIndex == null ? {} : Object.assign({}, state.projects[state.editingIndex]);
     var out = {
-      id: d.id, title: d.title, category: d.category, category_ar: d.category_ar, tagline: d.tagline, problem: d.problem,
+      id: d.id, title: d.title, category: d.category, category_ar: d.category_ar, cover_steps: d.cover_steps.length ? d.cover_steps : undefined, tagline: d.tagline, problem: d.problem,
       highlights: d.highlights, result: d.result, repo_url: d.repo_url, guide_url: d.guide_url, guide_label: d.guide_label, guide_label_ar: d.guide_label_ar, demo_url: d.demo_url,
       featured: d.featured, order: d.order === '' ? undefined : Number(d.order),
       title_ar: d.title_ar, tagline_ar: d.tagline_ar, problem_ar: d.problem_ar,
@@ -479,7 +492,7 @@
     };
     Object.keys(out).forEach(function (k) { base[k] = out[k]; });
     // Drop empty optional fields to keep the JSON tidy.
-    ['category_ar', 'guide_url', 'guide_label', 'guide_label_ar', 'demo_url', 'order', 'title_ar', 'tagline_ar', 'problem_ar', 'result_ar']
+    ['cover_steps', 'category_ar', 'guide_url', 'guide_label', 'guide_label_ar', 'demo_url', 'order', 'title_ar', 'tagline_ar', 'problem_ar', 'result_ar']
       .forEach(function (k) { if (base[k] === '' || base[k] === undefined) delete base[k]; });
     if (!base.highlights_ar.length) delete base.highlights_ar;
     // Tools, code and screenshots are no longer shown on cards, so old fields are dropped.

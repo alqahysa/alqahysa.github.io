@@ -41,7 +41,11 @@
       'layer.cicd': 'CI/CD', 'layer.ship': 'Ship it', 'layer.business': 'Business', 'layer.modeling': 'Modeling',
       'layer.architecture': 'Architecture', 'layer.governance': 'Governance', 'layer.testing': 'Testing', 'layer.ai': 'AI/BI',
       'layer.help': 'Help',
-      'help.title': 'Troubleshooting'
+      'help.title': 'Troubleshooting',
+      'g.goal': 'Goal', 'g.creates': "You'll create", 'g.journey': 'Stop {n} of {total} on the path',
+      'call.check': 'Check', 'call.warn': 'Watch out', 'call.commit': 'Commit', 'call.why': 'Why it matters',
+      'call.demo': 'Record it for your demo', 'g.cell': 'Cell {n}', 'g.tree': 'Folder layout',
+      'g.overview': 'Before you start', 'g.illustration': 'Illustration'
     },
     ar: {
       'name': 'سارة أ. القحطاني', 'skip': 'انتقل إلى المحتوى الرئيسي', 'nav.label': 'الدليل', 'nav.back': 'كل المشاريع →',
@@ -74,7 +78,11 @@
       'layer.cicd': 'CI/CD', 'layer.ship': 'النشر والعرض', 'layer.business': 'الأعمال', 'layer.modeling': 'النمذجة',
       'layer.architecture': 'المعمارية', 'layer.governance': 'الحوكمة', 'layer.testing': 'الاختبار', 'layer.ai': 'AI/BI',
       'layer.help': 'مساعدة',
-      'help.title': 'حل المشكلات'
+      'help.title': 'حل المشكلات',
+      'g.goal': 'الهدف', 'g.creates': 'ما ستنشئه', 'g.journey': 'المحطة {n} من {total} في المسار',
+      'call.check': 'تحقّق', 'call.warn': 'انتبه', 'call.commit': 'احفظ التغييرات (Commit)', 'call.why': 'لماذا يهم',
+      'call.demo': 'سجّله لعرضك التوضيحي', 'g.cell': 'الخلية {n}', 'g.tree': 'هيكل المجلدات',
+      'g.overview': 'قبل أن تبدأ', 'g.illustration': 'رسم توضيحي'
     }
   };
 
@@ -119,8 +127,35 @@
     steps: 'M4 6h16M4 12h16M4 18h10', clock: 'M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
     layers: 'm12 3 9 5-9 5-9-5zM3 13l9 5 9-5', code: 'm8 7-5 5 5 5M16 7l5 5-5 5',
     arrow: 'M5 12h14M13 6l6 6-6 6', back: 'M19 12H5M11 18l-6-6 6-6', check: 'm5 12 4.5 4.5L19 7',
-    chevron: 'm6 9 6 6 6-6', copy: 'M9 9h10v10H9zM5 15V5h10', play: 'M7 5v14l12-7z', pause: 'M8 5v14M16 5v14'
+    chevron: 'm6 9 6 6 6-6', copy: 'M9 9h10v10H9zM5 15V5h10', play: 'M7 5v14l12-7z', pause: 'M8 5v14M16 5v14',
+    warn: 'M12 3 2 20h20zM12 10v4M12 17v.5', why: 'M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z',
+    commit: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 12h6M15 12h6', demo: 'M3 7h12v10H3zM15 10l6-3v10l-6-3',
+    cell: 'M5 3h14v18H5zM9 3v18', folder: 'M3 6h6l2 2h10v11H3z', file: 'M7 3h7l5 5v13H7zM14 3v5h5',
+    goal: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 12h.01'
   };
+  var LAYER_ICON = {
+    setup: 'M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z',
+    data: 'M7 3h7l4 4v12H7zM14 3v4h4M4 7v14h11',
+    generate: 'M7 3h7l4 4v12H7zM14 3v4h4M4 7v14h11',
+    bronze: 'M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zM4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3',
+    incremental: 'M6 3h12v18l-6-4-6 4z',
+    orchestration: 'M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
+    bi: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
+    quality: 'M12 3 4.5 6v5.5c0 4.6 3.2 8 7.5 9.5 4.3-1.5 7.5-4.9 7.5-9.5V6zM8.8 12l2.3 2.3 4.2-4.6',
+    cicd: 'M6 3v12M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 9a9 9 0 0 1-9 9',
+    ship: 'M5 15c-1.5 1.5-2 5-2 5s3.5-.5 5-2M9 13l-2-2c1.5-5 6-8 13-8 0 7-3 11.5-8 13l-2-2M15 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z',
+    business: 'M4 5h16v11H9l-5 4z',
+    modeling: 'M12 3.5 14.6 9l6 .6-4.5 4 1.3 5.9L12 16.6l-5.4 2.9 1.3-5.9-4.5-4 6-.6z',
+    architecture: 'M3 4h18v16H3zM3 10h18M10 10v10',
+    governance: 'M6 11h12v10H6zM8 11V7a4 4 0 0 1 8 0v4',
+    ai: 'M12 3c.6 4.2 2.8 6.4 7 7-4.2.6-6.4 2.8-7 7-.6-4.2-2.8-6.4-7-7 4.2-.6 6.4-2.8 7-7zM19 16c.3 1.8 1.2 2.7 3 3-1.8.3-2.7 1.2-3 3-.3-1.8-1.2-2.7-3-3 1.8-.3 2.7-1.2 3-3z',
+    help: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM5.6 5.6l3.6 3.6M14.8 14.8l3.6 3.6M18.4 5.6l-3.6 3.6M9.2 14.8l-3.6 3.6',
+    download: 'M12 3v12M7 10l5 5 5-5M4 20h16', repo: 'M3 6h6l2 2h10v11H3z',
+    commit: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 12h6M15 12h6',
+    shield: 'M12 3 4.5 6v5.5c0 4.6 3.2 8 7.5 9.5 4.3-1.5 7.5-4.9 7.5-9.5V6zM8.8 12l2.3 2.3 4.2-4.6'
+  };
+  LAYER_ICON.silver = LAYER_ICON.gold = LAYER_ICON.bronze; LAYER_ICON.testing = LAYER_ICON.quality;
+  function layerIcon(key, cls) { return icon(LAYER_ICON[key] || LAYER_ICON.data, cls || 'icon'); }
 
   /* ---------- theme + language (same behaviour as the portfolio) ---------- */
   function initTheme() {
@@ -174,12 +209,88 @@
     });
     return frag;
   }
+  function plainText(segs) { return (segs || []).map(function (x) { return x.t; }).join(''); }
+  var CALLOUTS = [
+    { re: /^Check\b/, kind: 'check', icon: 'check' },
+    { re: /^(Pitfall|If you get|Watch the break|Data residency|Extension must match)/, kind: 'warn', icon: 'warn' },
+    { re: /^Commit\b/, kind: 'commit', icon: 'commit' },
+    { re: /^(Why|Design decisions|Deletes at the source)/, kind: 'why', icon: 'why' },
+    { re: /^Prove\b/, kind: 'demo', icon: 'demo' }
+  ];
+  function classify(b) {
+    if (!b || b.type !== 'p') return null;
+    var txt = plainText(b.segs);
+    var cell = /^Cell (\d+)/.exec(txt);
+    if (cell) return { kind: 'cell', n: cell[1] };
+    for (var i = 0; i < CALLOUTS.length; i++) if (CALLOUTS[i].re.test(txt)) return CALLOUTS[i];
+    return null;
+  }
+  /** Split a paragraph into its bold lead-in (title) and the rest. */
+  function splitLead(segs) {
+    if (segs.length && segs[0].b) {
+      var title = segs[0].t.trim().replace(/[:.]+$/, '');
+      var rest = segs.slice(1).map(function (x) { return Object.assign({}, x); });
+      if (rest.length) rest[0].t = rest[0].t.replace(/^\s+/, '');
+      return { title: title, rest: rest };
+    }
+    return { title: null, rest: segs };
+  }
+  function callout(c, b, extra) {
+    var parts = splitLead(b.segs);
+    var title = parts.title || t('call.' + c.kind);
+    var body = el('div', { className: 'g-call-body' });
+    if (plainText(parts.rest).trim()) { var p = el('p'); p.appendChild(inline(parts.rest)); body.appendChild(p); }
+    if (extra) renderBlocks([extra], body);
+    return el('aside', { className: 'g-call ' + c.kind }, [
+      el('span', { className: 'g-call-icon', 'aria-hidden': 'true' }, [icon(ICON[c.icon])]),
+      el('div', null, [el('p', { className: 'g-call-title', text: title }), body])
+    ]);
+  }
+  function cellLabel(c, b) {
+    var segs = b.segs.map(function (x) { return Object.assign({}, x); });
+    segs[0].t = segs[0].t.replace(/^Cell \d+\s*[:.]?\s*/, '');
+    if (!segs[0].t) segs.shift();
+    var p = el('p');
+    p.appendChild(el('span', { className: 'g-cell-pill' }, [icon(ICON.cell), t('g.cell', { n: c.n })]));
+    p.appendChild(inline(segs));
+    return el('div', { className: 'g-cell' }, [p]);
+  }
   function renderBlocks(blocks, into) {
-    (blocks || []).forEach(function (b) {
-      try { var n = renderBlock(b); if (n) into.appendChild(n); }
-      catch (e) { console.error('[guide] block failed', b, e); }
-    });
+    blocks = blocks || [];
+    for (var i = 0; i < blocks.length; i++) {
+      var b = blocks[i];
+      try {
+        var c = classify(b), n;
+        if (c && c.kind === 'cell') n = cellLabel(c, b);
+        else if (c) {
+          // a callout that ends with ":" owns the list or code that follows it
+          var next = blocks[i + 1];
+          var owns = /:\s*$/.test(plainText(b.segs)) && next && /^(ul|ol|code|table)$/.test(next.type);
+          n = callout(c, b, owns ? next : null);
+          if (owns) i++;
+        } else n = renderBlock(b);
+        if (n) into.appendChild(n);
+      } catch (e) { console.error('[guide] block failed', b, e); }
+    }
     return into;
+  }
+  function treeBlock(text) {
+    var rows = el('ul', { className: 'g-tree-list' });
+    text.split('\n').forEach(function (line) {
+      if (!line.trim()) return;
+      var m = /^([\s│├└─|`\-]*)(.*)$/.exec(line);
+      var depth = Math.round(m[1].replace(/\t/g, '    ').length / 4);
+      var rest = m[2], note = '';
+      var cut = rest.search(/\s+(←|#)\s*/);
+      if (cut !== -1) { note = rest.slice(cut).replace(/^\s+(←|#)\s*/, ''); rest = rest.slice(0, cut); }
+      var isDir = /\/$/.test(rest.trim());
+      rows.appendChild(el('li', { style: 'padding-inline-start:' + (depth * 1.2) + 'rem' }, [
+        icon(isDir ? ICON.folder : ICON.file, 'icon ' + (isDir ? 'dir' : 'doc')),
+        el('span', { className: 'name', text: rest.trim() }),
+        note ? el('span', { className: 'note', text: note }) : null
+      ]));
+    });
+    return el('figure', { className: 'g-tree', dir: 'ltr' }, [el('figcaption', null, [icon(ICON.folder), t('g.tree')]), rows]);
   }
   function renderBlock(b) {
     switch (b.type) {
@@ -199,6 +310,7 @@
   }
   function codeBlock(b) {
     var text = String(b.text || '');
+    if (/[├└]──/.test(text)) return treeBlock(text);
     var lines = text.split('\n').length;
     var pre = el('pre', { tabindex: '0', dir: 'ltr' }, [el('code', { text: text })]);
     var copy = el('button', { type: 'button' }, [icon(ICON.copy, 'icon'), el('span', { text: t('g.copy') })]);
@@ -499,16 +611,154 @@
     ]);
   }
 
+  /* ---------- intro: story, sources, layers, legend ---------- */
+  function indexChart(side) {
+    // schematic only: two lines that both start at 100
+    var W = 360, H = 200, x0 = 40, x1 = 340, y100 = 130;
+    var market = [[0, 0], [1, -6], [2, -4], [3, -14], [4, -12], [5, -22], [6, -26], [7, -24], [8, -34]];
+    var retail = [[0, 0], [1, -10], [2, -16], [3, -24], [4, -30], [5, -44], [6, -52], [7, -58], [8, -74]];
+    function pts(arr) { return arr.map(function (p) { return (x0 + p[0] * (x1 - x0) / 8) + ',' + (y100 + p[1]); }).join(' '); }
+    var svg = s('svg', { viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': side.title, direction: 'ltr' }, [
+      s('line', { 'class': 'ic-base', x1: x0, x2: x1, y1: y100, y2: y100 }),
+      s('text', { 'class': 'ic-axis', x: x0 - 8, y: y100 + 4, 'text-anchor': 'end', text: '100' }),
+      s('line', { 'class': 'ic-axis-line', x1: x0, x2: x0, y1: 30, y2: 170 }),
+      s('line', { 'class': 'ic-axis-line', x1: x0, x2: x1, y1: 170, y2: 170 }),
+      s('text', { 'class': 'ic-axis', x: x1, y: 188, 'text-anchor': 'end', text: 'months →' }),
+      s('polyline', { 'class': 'ic-market', points: pts(market) }),
+      s('polyline', { 'class': 'ic-retail', points: pts(retail) }),
+      s('circle', { 'class': 'ic-dot-r', cx: x1, cy: y100 - 74, r: 5 }),
+      s('circle', { 'class': 'ic-dot-m', cx: x1, cy: y100 - 34, r: 5 }),
+    ]);
+    var legend = el('p', { className: 'ic-legend' }, [
+      el('span', { className: 'r' }, [el('i'), 'Retailer']), el('span', { className: 'm' }, [el('i'), 'Market (SAMA)']),
+      el('span', { className: 'b' }, [el('i'), '100 = start month'])
+    ]);
+    return el('figure', { className: 'g-side', dir: 'ltr' }, [
+      el('figcaption', { text: side.title }), svg, legend,
+      el('p', { className: 'g-side-cap', text: side.caption })
+    ]);
+  }
+  function timeline(side) {
+    var ev = side.events || [];
+    var row = el('ol', { className: 'g-tl' }, ev.map(function (e, i) {
+      return el('li', { className: 'g-tl-ev ' + (e.tone || '') }, [
+        el('span', { className: 'g-tl-dot', 'aria-hidden': 'true' }),
+        el('strong', { text: e.label }), el('span', { className: 'g-tl-date', text: e.date || '' })
+      ]);
+    }));
+    return el('figure', { className: 'g-side', dir: 'ltr' }, [
+      el('figcaption', { text: side.title }), row,
+      side.bracket ? el('p', { className: 'g-tl-bracket' }, [el('span', { className: 'br', 'aria-hidden': 'true' }), el('span', { className: 'txt', text: side.bracket })]) : null,
+      el('p', { className: 'g-side-cap', text: side.caption })
+    ]);
+  }
+  function introSection(sec) {
+    switch (sec.kind) {
+      case 'story': {
+        var side = sec.side ? (sec.side.kind === 'timeline' ? timeline(sec.side) : indexChart(sec.side)) : null;
+        return el('div', { className: 'g-story-row' }, [
+          el('article', { className: 'g-story' }, [
+            owl('owl-mini', 'g-story-owl'),
+            el('div', null, [
+              el('h2', { text: sec.title }),
+              el('p', { className: 'g-story-lead', text: sec.lead }),
+              el('p', { text: sec.text }),
+              el('blockquote', { className: 'g-bubble' }, [el('p', { text: '“' + sec.quote + '”' }), sec.quote_by ? el('cite', { text: '— ' + sec.quote_by }) : null]),
+              sec.tip ? el('p', { className: 'g-story-tip' }, [icon(ICON.why), sec.tip]) : null
+            ])
+          ]),
+          side
+        ]);
+      }
+      case 'cards':
+        return el('div', { className: 'g-block' }, [
+          el('h3', { className: 'g-block-title', text: sec.title }),
+          el('div', { className: 'g-cards' }, sec.cards.map(function (c) {
+            return el('article', { className: 'g-card' }, [
+              el('div', { className: 'g-card-top' }, [
+                el('span', { className: 'g-card-icon', 'aria-hidden': 'true' }, [layerIcon(c.icon)]),
+                c.tag ? el('span', { className: 'g-card-tag ' + c.tag.toLowerCase(), text: c.tag }) : null
+              ]),
+              el('h4', { text: c.title }),
+              el('p', { text: c.text }),
+              c.bullets ? el('ul', null, c.bullets.map(function (x) { return el('li', { text: x }); })) : null
+            ]);
+          }))
+        ]);
+      case 'callout':
+        return el('aside', { className: 'g-call ' + (sec.tone === 'warn' ? 'warn' : 'why') }, [
+          el('span', { className: 'g-call-icon', 'aria-hidden': 'true' }, [icon(ICON.why)]),
+          el('div', null, [el('p', { className: 'g-call-title', text: sec.title }), el('div', { className: 'g-call-body' }, [el('p', { text: sec.text })])])
+        ]);
+      case 'layers':
+        return el('div', { className: 'g-block g-layers-wrap' }, [
+          el('h3', { className: 'g-block-title', text: sec.title }),
+          el('ol', { className: 'g-layers' }, sec.items.map(function (it) {
+            return el('li', { className: 'g-layer-row ' + it.tone }, [
+              el('span', { className: 'g-layer-name', text: it.name }), el('span', { className: 'g-layer-text', text: it.text })
+            ]);
+          }))
+        ]);
+      case 'legend':
+        return el('div', { className: 'g-block g-legend-wrap' }, [
+          el('h3', { className: 'g-block-title', text: sec.title }),
+          el('dl', { className: 'g-legend' }, sec.items.reduce(function (acc, it) {
+            acc.push(el('dt', null, [el('code', { text: it.code })])); acc.push(el('dd', { text: it.text })); return acc;
+          }, []))
+        ]);
+      default: return null;
+    }
+  }
   function overview(g) {
-    var intro = el('div', { className: 'g-content g-intro', lang: 'en', dir: 'ltr' });
-    renderBlocks(g.intro, intro);
+    var secs = g.intro_sections || [];
+    var story = secs.filter(function (x) { return x.kind === 'story'; })[0];
+    var rest = secs.filter(function (x) { return x.kind !== 'story'; });
     var outcomes = loc(g, 'outcomes') || [];
-    return el('section', { className: 'g-overview', 'aria-labelledby': 'g-build' }, [
-      el('div', { className: 'container' }, [
-        el('h2', { id: 'g-build', text: t('g.build') }),
-        el('ul', { className: 'g-outcomes' }, outcomes.map(function (o) { return el('li', { text: o }); })),
-        g.architecture ? diagram(g.architecture) : null,
-        g.intro && g.intro.length ? intro : null
+    var body = el('div', { className: 'container' }, [
+      story ? introSection(story) : null,
+      el('h2', { id: 'g-build', className: 'g-build-title', dir: 'auto', text: t('g.build') }),
+      el('ul', { className: 'g-outcomes' }, outcomes.map(function (o) { return el('li', { dir: 'auto', text: o }); })),
+      g.architecture ? diagram(g.architecture) : null
+    ]);
+    // layers + legend sit side by side; everything else stacks
+    var grid = el('div', { className: 'g-intro-grid' });
+    rest.forEach(function (sec) {
+      var n = introSection(sec); if (!n) return;
+      if (sec.kind === 'layers' || sec.kind === 'legend') grid.appendChild(n); else body.appendChild(n);
+    });
+    if (grid.childNodes.length) body.appendChild(grid);
+    if (!secs.length && g.intro && g.intro.length) body.appendChild(renderBlocks(g.intro, el('div', { className: 'g-content g-intro', lang: 'en', dir: 'ltr' })));
+    return el('section', { className: 'g-overview', 'aria-labelledby': 'g-build', lang: 'en', dir: 'ltr' }, [body]);
+  }
+
+  /* ---------- per-step illustration: journey branch + at-a-glance ---------- */
+  function journey(st) {
+    var steps = realSteps(), idx = steps.indexOf(st);
+    if (idx === -1) return null;
+    var list = el('ol', { className: 'g-journey-dots' }, steps.map(function (x, i) {
+      var b = el('button', {
+        type: 'button', className: 'g-jdot' + (isDone(x.id) ? ' done' : '') + (i === idx ? ' here' : ''),
+        'aria-label': t('g.step', { n: x.num }) + ': ' + x.title, 'aria-current': i === idx ? 'step' : null, title: x.title
+      }, [i === idx ? owl('owl-mini', 'g-jowl') : null]);
+      b.addEventListener('click', function () { goToStep(x.id); });
+      return el('li', null, [b]);
+    }));
+    return el('nav', { className: 'g-journey', 'aria-label': t('g.journey', { n: idx + 1, total: steps.length }) }, [
+      el('span', { className: 'g-journey-label', text: t('g.journey', { n: idx + 1, total: steps.length }) }), list
+    ]);
+  }
+  function glance(st) {
+    if (!st.goal) return null;
+    var creates = st.creates || [];
+    return el('div', { className: 'g-glance ' + st.layer }, [
+      el('div', { className: 'g-glance-art', 'aria-hidden': 'true' }, [
+        el('span', { className: 'g-glance-orb' }, [layerIcon(st.layer)]), owl('owl-mini', 'g-glance-owl')
+      ]),
+      el('div', { className: 'g-glance-text' }, [
+        el('p', { className: 'g-glance-label' }, [icon(ICON.goal), t('g.goal')]),
+        el('p', { className: 'g-glance-goal', dir: 'auto', text: loc(st, 'goal') }),
+        creates.length ? el('p', { className: 'g-glance-label' }, [icon(ICON.file), t('g.creates')]) : null,
+        creates.length ? el('ul', { className: 'g-chiplist', dir: 'ltr' }, creates.map(function (c) { return el('li', { text: c }); })) : null
       ])
     ]);
   }
@@ -585,6 +835,8 @@
       toggle
     ]));
     sec.appendChild(el('div', { className: 'g-step-body', id: bodyId }, [
+      journey(st),
+      glance(st),
       st.tip ? el('aside', { className: 'g-tip' }, [owl('owl-mini'), el('p', null, [el('strong', { text: t('g.tip') + ' ' }), loc(st, 'tip')])]) : null,
       content,
       el('div', { className: 'g-step-foot' }, [st.num != null ? doneBtn : null, nav])
@@ -617,6 +869,9 @@
     var tb = document.getElementById('toc-bar'); if (tb) tb.style.width = (pct * 100) + '%';
     state.guide.steps.forEach(function (st) {
       var li = document.getElementById('toc-' + st.id); if (li) li.classList.toggle('done', isDone(st.id));
+    });
+    document.querySelectorAll('.g-jdot').forEach(function (b, i) {
+      var steps = realSteps(); var x = steps[i % steps.length]; if (x) b.classList.toggle('done', isDone(x.id));
     });
     if (complete && celebrate && !reduceMotion) confetti();
   }

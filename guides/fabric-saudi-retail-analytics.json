@@ -204,263 +204,6 @@
    }
   ]
  },
- "intro": [
-  {
-   "type": "p",
-   "segs": [
-    {
-     "t": "You will build an automated sales analytics platform for a Saudi retail chain: monthly files from its branches and online store land in Fabric, a scheduled pipeline cleans and models them, and a Power BI report updates itself and compares the chain's growth with real national card spending published by the Saudi Central Bank (SAMA). Expect 2 to 3 weeks at a few hours a day."
-    }
-   ]
-  },
-  {
-   "type": "p",
-   "segs": [
-    {
-     "t": "The business story (use it in your README and on Upwork).",
-     "b": 1
-    },
-    {
-     "t": " A fictional retailer, here called "
-    },
-    {
-     "t": "Waha Retail",
-     "i": 1
-    },
-    {
-     "t": ", sells electronics, clothing, furniture, food, jewelry and health products through 25 branches across the Kingdom and an online store. Every month, the finance team merges exports from the point-of-sale system and the e-commerce platform in Excel. They want a dashboard that updates on its own, shows sales by city, channel and payment method, measures the effect of Ramadan, White Friday and National Day, and answers the question every Saudi retail manager asks: are we growing faster or slower than the market?"
-    }
-   ]
-  },
-  {
-   "type": "p",
-   "segs": [
-    {
-     "t": "Two data sources:",
-     "b": 1
-    }
-   ]
-  },
-  {
-   "type": "ol",
-   "items": [
-    [
-     {
-      "type": "p",
-      "segs": [
-       {
-        "t": "The retailer's data (generated).",
-        "b": 1
-       },
-       {
-        "t": " No public Saudi dataset contains individual orders, so a Python script you run once creates three years of realistic monthly files: orders, order lines, payments, customers, products and branches. It reflects how Saudi retail actually works: prices in SAR with 15% VAT, payment by mada, Apple Pay, STC Pay, Tabby and Tamara, Friday and Saturday weekends, salary-day peaks around the 27th, and seasonal spikes. It also deliberately includes the messiness of real exports (city names in Arabic and English, a timestamp format that changes in one month, duplicate lines, files saved with a byte order mark), so the pipeline has real problems to solve."
-       }
-      ]
-     }
-    ],
-    [
-     {
-      "type": "p",
-      "segs": [
-       {
-        "t": "The market benchmark (real).",
-        "b": 1
-       },
-       {
-        "t": " SAMA publishes point-of-sale card spending by sector. KAPSARC republishes it as a downloadable dataset, "
-       },
-       {
-        "t": "Points of Sale Transactions and Sales by Sector",
-        "i": 1
-       },
-       {
-        "t": ", with monthly, quarterly and annual figures for sectors such as clothing and footwear, furniture, jewelry, electronics, food and health. Your pipeline downloads it automatically and lines it up with the retailer's categories."
-       }
-      ]
-     }
-    ]
-   ]
-  },
-  {
-   "type": "p",
-   "segs": [
-    {
-     "t": "Be transparent about this in your portfolio:",
-     "b": 1
-    },
-    {
-     "t": " say the retailer is fictional and its data generated, and that the market data is real and published by SAMA. Clients respect that, and the generator itself shows skill."
-    }
-   ]
-  },
-  {
-   "type": "p",
-   "segs": [
-    {
-     "t": "What you will build:",
-     "b": 1
-    }
-   ]
-  },
-  {
-   "type": "ol",
-   "items": [
-    [
-     {
-      "type": "p",
-      "segs": [
-       {
-        "t": "Landing:",
-        "b": 1
-       },
-       {
-        "t": " monthly CSV files in the Lakehouse "
-       },
-       {
-        "t": "Files",
-        "c": 1
-       },
-       {
-        "t": " area, plus the SAMA data copied in by the pipeline."
-       }
-      ]
-     }
-    ],
-    [
-     {
-      "type": "p",
-      "segs": [
-       {
-        "t": "Bronze:",
-        "b": 1
-       },
-       {
-        "t": " raw Delta tables with audit columns."
-       }
-      ]
-     }
-    ],
-    [
-     {
-      "type": "p",
-      "segs": [
-       {
-        "t": "Silver:",
-        "b": 1
-       },
-       {
-        "t": " clean, typed tables: one spelling per city, one timestamp format, no duplicates, VAT separated from net sales."
-       }
-      ]
-     }
-    ],
-    [
-     {
-      "type": "p",
-      "segs": [
-       {
-        "t": "Gold:",
-        "b": 1
-       },
-       {
-        "t": " a star schema with a Saudi calendar (weekend, Ramadan, Eid, White Friday, National Day) and a monthly market benchmark."
-       }
-      ]
-     }
-    ],
-    [
-     {
-      "type": "p",
-      "segs": [
-       {
-        "t": "Serving:",
-        "b": 1
-       },
-       {
-        "t": " a Direct Lake semantic model and a Power BI report."
-       }
-      ]
-     }
-    ],
-    [
-     {
-      "type": "p",
-      "segs": [
-       {
-        "t": "Operations:",
-        "b": 1
-       },
-       {
-        "t": " a scheduled pipeline, data quality checks, Telegram alerts and Git."
-       }
-      ]
-     }
-    ]
-   ]
-  },
-  {
-   "type": "p",
-   "segs": [
-    {
-     "t": "Naming used in this guide:",
-     "b": 1
-    },
-    {
-     "t": " one Lakehouse "
-    },
-    {
-     "t": "lh_retail",
-     "c": 1
-    },
-    {
-     "t": ", tables prefixed "
-    },
-    {
-     "t": "bronze_",
-     "c": 1
-    },
-    {
-     "t": ", "
-    },
-    {
-     "t": "silver_",
-     "c": 1
-    },
-    {
-     "t": ", "
-    },
-    {
-     "t": "gold_",
-     "c": 1
-    },
-    {
-     "t": ", notebooks "
-    },
-    {
-     "t": "nb_",
-     "c": 1
-    },
-    {
-     "t": ", pipelines "
-    },
-    {
-     "t": "pl_",
-     "c": 1
-    },
-    {
-     "t": "."
-    }
-   ]
-  },
-  {
-   "type": "p",
-   "segs": [
-    {
-     "t": "Data moves down the left column; the pipeline on the right downloads the SAMA data, runs one notebook per layer, and sends you a Telegram alert if any step fails."
-    }
-   ]
-  }
- ],
  "steps": [
   {
    "id": "step-0",
@@ -693,6 +436,14 @@
      "lang": "",
      "text": "fabric-saudi-retail-analytics/\n├── fabric/                     ← synced by Fabric Git integration\n├── scripts/\n│   └── generate_saudi_retail.py\n├── docs/\n│   ├── architecture.png\n│   └── screenshots/\n└── README.md"
     }
+   ],
+   "goal": "Create the workspace, an empty Lakehouse and a GitHub repo connected to it.",
+   "goal_ar": "أنشئ مساحة العمل وLakehouse فارغًا ومستودع GitHub مربوطًا بها.",
+   "creates": [
+    "Fabric workspace",
+    "lh_retail",
+    "GitHub repo",
+    "fabric/"
    ]
   },
   {
@@ -1697,6 +1448,14 @@
       }
      ]
     }
+   ],
+   "goal": "Generate three years of messy, realistic Saudi retail files and check the real SAMA market data once.",
+   "goal_ar": "ولّد بيانات تجزئة سعودية واقعية وفوضوية لثلاث سنوات، وألقِ نظرة أولى على بيانات سوق ساما الحقيقية.",
+   "creates": [
+    "generate_saudi_retail.py",
+    "landing/sales/YYYY-MM/",
+    "landing/reference/",
+    "market CSV"
    ]
   },
   {
@@ -1993,6 +1752,14 @@
       }
      ]
     }
+   ],
+   "goal": "Copy every file into Delta tables exactly as it is, strip the byte order mark and add audit columns.",
+   "goal_ar": "انسخ كل ملف إلى جداول Delta كما هو، واحذف علامة ترتيب البايت، وأضف أعمدة التدقيق.",
+   "creates": [
+    "nb_01_bronze_ingest",
+    "bronze_orders",
+    "bronze_order_items",
+    "bronze_* tables"
    ]
   },
   {
@@ -2298,6 +2065,14 @@
       ]
      ]
     }
+   ],
+   "goal": "Turn raw text into trustworthy tables: one city spelling, one timestamp type, VAT split out, no duplicates.",
+   "goal_ar": "حوّل النص الخام إلى جداول موثوقة: تهجئة واحدة للمدينة، ونوع وقت واحد، وفصل الضريبة، ودون تكرار.",
+   "creates": [
+    "nb_02_silver_transform",
+    "silver_orders",
+    "silver_order_items",
+    "clean_* functions"
    ]
   },
   {
@@ -2755,6 +2530,15 @@
       }
      ]
     }
+   ],
+   "goal": "Reshape silver into a star schema with a Saudi calendar and a ready-made market benchmark.",
+   "goal_ar": "أعد تشكيل Silver في نموذج نجمي مع تقويم سعودي ومقارنة جاهزة بالسوق.",
+   "creates": [
+    "nb_03_gold_model",
+    "gold_fact_sales_lines",
+    "gold_fact_orders",
+    "gold_dim_date",
+    "gold_mart_benchmark_monthly"
    ]
   },
   {
@@ -4375,6 +4159,14 @@
       }
      ]
     }
+   ],
+   "goal": "Process only the rows that arrived since the last run, so run time stays flat as months pile up.",
+   "goal_ar": "عالِج فقط الصفوف التي وصلت منذ آخر تشغيل، ليبقى زمن التشغيل ثابتًا مع تراكم الأشهر.",
+   "creates": [
+    "etl_watermark",
+    "upsert helpers",
+    "sync_months",
+    "reconciliation check"
    ]
   },
   {
@@ -6488,6 +6280,14 @@
       }
      ]
     }
+   ],
+   "goal": "Download the market file, run the four notebooks every month, and get a Telegram message if anything fails.",
+   "goal_ar": "نزّل ملف السوق، وشغّل الدفاتر الأربعة كل شهر، واستلم رسالة Telegram إن فشل أي شيء.",
+   "creates": [
+    "pl_load_month",
+    "pl_monthly_sales",
+    "pl_backfill",
+    "Telegram bot"
    ]
   },
   {
@@ -7033,6 +6833,13 @@
       }
      ]
     }
+   ],
+   "goal": "Serve gold through Direct Lake and build a report that measures revenue excluding VAT.",
+   "goal_ar": "قدّم طبقة Gold عبر Direct Lake وابنِ تقريرًا يقيس الإيرادات دون ضريبة القيمة المضافة.",
+   "creates": [
+    "sm_waha_retail",
+    "_Measures",
+    "Power BI report"
    ]
   },
   {
@@ -7193,6 +7000,13 @@
       }
      ]
     }
+   ],
+   "goal": "Test the gold tables on every run and fail the run when a check fails.",
+   "goal_ar": "اختبر جداول Gold في كل تشغيل، وأفشِل التشغيل عند فشل أي فحص.",
+   "creates": [
+    "nb_04_quality_checks",
+    "dq_results",
+    "5 checks"
    ]
   },
   {
@@ -9537,6 +9351,14 @@
       }
      ]
     }
+   ],
+   "goal": "Work on branches, check every pull request automatically, and promote tested items from Dev to Prod.",
+   "goal_ar": "اعمل على الفروع، وافحص كل طلب دمج آليًا، وانقل العناصر المختبرة من التطوير إلى الإنتاج.",
+   "creates": [
+    "feature branch",
+    ".github/workflows/ci.yml",
+    "tests/test_generator.py",
+    "dp_waha_retail"
    ]
   },
   {
@@ -9863,6 +9685,123 @@
        "t": " the pipeline loads a new month on its own, the SAMA data refreshes with it, every quality check passes, and you can explain each design decision in your own words."
       }
      ]
+    }
+   ],
+   "goal": "Package the project so a client understands it in two minutes and trusts how it was built.",
+   "goal_ar": "جهّز المشروع ليفهمه العميل في دقيقتين ويثق في طريقة بنائه.",
+   "creates": [
+    "README.md",
+    "docs/architecture.png",
+    "screenshots",
+    "demo video"
+   ]
+  }
+ ],
+ "intro_sections": [
+  {
+   "kind": "story",
+   "title": "The story",
+   "lead": "Waha Retail (fictional) sells electronics, clothing, furniture, food, jewelry and health products through 25 branches across the Kingdom and an online store.",
+   "text": "Every month, finance merges point-of-sale and e-commerce exports by hand in Excel. They want a dashboard that updates itself, shows sales by city, channel and payment method, and measures Ramadan, White Friday and National Day.",
+   "quote": "Are we growing faster or slower than the market?",
+   "quote_by": "Every Saudi retail manager",
+   "tip": "Use this story in your README and client proposals.",
+   "side": {
+    "kind": "indexchart",
+    "title": "The benchmark idea: index both to 100",
+    "caption": "Illustration only. The guide compares the retailer with real SAMA card spending, indexed to 100 so growth is compared like for like."
+   }
+  },
+  {
+   "kind": "cards",
+   "title": "Two data sources",
+   "cards": [
+    {
+     "icon": "generate",
+     "tag": "Generated",
+     "title": "The retailer's data",
+     "text": "No public Saudi dataset has individual orders, so a Python script you run once creates three years of realistic monthly files.",
+     "bullets": [
+      "Orders, order lines, payments, customers, products, branches",
+      "SAR prices with 15% VAT; mada, Apple Pay, STC Pay, Tabby, Tamara",
+      "Fri–Sat weekends, salary-day peaks around the 27th, seasonal spikes",
+      "Real-world mess on purpose: Arabic + English city names, a timestamp format change, duplicate lines, byte order marks"
+     ]
+    },
+    {
+     "icon": "download",
+     "tag": "Real",
+     "title": "The market benchmark",
+     "text": "SAMA publishes point-of-sale card spending by sector; KAPSARC republishes it as Points of Sale Transactions and Sales by Sector.",
+     "bullets": [
+      "Monthly, quarterly and annual figures",
+      "Sectors such as clothing, furniture, jewelry, electronics, food and health",
+      "Your pipeline downloads it automatically and lines it up with the retailer's categories"
+     ]
+    }
+   ]
+  },
+  {
+   "kind": "callout",
+   "tone": "info",
+   "title": "Be transparent in your portfolio",
+   "text": "Say the retailer is fictional and its data generated, and that the market data is real and published by SAMA. Clients respect that, and the generator itself shows skill."
+  },
+  {
+   "kind": "layers",
+   "title": "The layers you'll build",
+   "items": [
+    {
+     "tone": "landing",
+     "name": "Landing",
+     "text": "Monthly CSV files in the Lakehouse Files area, plus the SAMA data copied in by the pipeline."
+    },
+    {
+     "tone": "bronze",
+     "name": "Bronze",
+     "text": "Raw Delta tables with audit columns."
+    },
+    {
+     "tone": "silver",
+     "name": "Silver",
+     "text": "Clean, typed tables: one spelling per city, one timestamp format, no duplicates, VAT separated from net sales."
+    },
+    {
+     "tone": "gold",
+     "name": "Gold",
+     "text": "A star schema with a Saudi calendar (weekend, Ramadan, Eid, White Friday, National Day) and a monthly market benchmark."
+    },
+    {
+     "tone": "serve",
+     "name": "Serving",
+     "text": "A Direct Lake semantic model and a Power BI report."
+    },
+    {
+     "tone": "ops",
+     "name": "Operations",
+     "text": "A scheduled pipeline, data-quality checks, Telegram alerts and Git."
+    }
+   ]
+  },
+  {
+   "kind": "legend",
+   "title": "Names used in this guide",
+   "items": [
+    {
+     "code": "lh_retail",
+     "text": "the one Lakehouse"
+    },
+    {
+     "code": "bronze_ · silver_ · gold_",
+     "text": "table prefix per layer"
+    },
+    {
+     "code": "nb_",
+     "text": "notebooks"
+    },
+    {
+     "code": "pl_",
+     "text": "pipelines"
     }
    ]
   }

@@ -5,6 +5,28 @@
     "title_ar": "تحليلات مبيعات التجزئة السعودية ومقارنتها بالسوق",
     "category": "Data Engineering",
     "category_ar": "هندسة البيانات",
+    "cover_steps": [
+      {
+        "icon": "files",
+        "label": "Monthly files",
+        "label_ar": "ملفات شهرية"
+      },
+      {
+        "icon": "clean",
+        "label": "Clean & reconcile",
+        "label_ar": "تنظيف ومطابقة"
+      },
+      {
+        "icon": "star",
+        "label": "Saudi star schema",
+        "label_ar": "نموذج نجمي سعودي"
+      },
+      {
+        "icon": "benchmark",
+        "label": "Report vs market",
+        "label_ar": "تقرير مقارن بالسوق"
+      }
+    ],
     "tagline": "An end-to-end lakehouse that automates a Saudi retailer's monthly sales reporting and benchmarks its growth against the national card-spending market.",
     "tagline_ar": "منصة Lakehouse متكاملة تؤتمت تقارير المبيعات الشهرية لتاجر تجزئة سعودي، وتقارن نموه بسوق الإنفاق بالبطاقات على مستوى المملكة.",
     "problem": "Waha Retail (fictional; 25 branches plus an online store) merged its monthly sales by hand in spreadsheets: slow, error-prone and late. Finance needed a self-updating dashboard and an answer to one question: are we growing faster or slower than the market?",
@@ -35,6 +57,28 @@
     "title_ar": "بنك نجد الوطني: تحليلات تكرار التعثّر خلال 30 يومًا",
     "category": "Data Engineering",
     "category_ar": "هندسة البيانات",
+    "cover_steps": [
+      {
+        "icon": "stream",
+        "label": "Nightly feeds",
+        "label_ar": "بيانات ليلية"
+      },
+      {
+        "icon": "mask",
+        "label": "Dedupe & mask",
+        "label_ar": "إزالة التكرار والإخفاء"
+      },
+      {
+        "icon": "flag",
+        "label": "30-day flag",
+        "label_ar": "علامة الـ 30 يومًا"
+      },
+      {
+        "icon": "ai",
+        "label": "KPIs & Genie",
+        "label_ar": "مؤشرات وGenie"
+      }
+    ],
     "tagline": "A layered lakehouse that flags customers who miss an installment again within 30 days of getting back on track.",
     "tagline_ar": "منصة Lakehouse متعددة الطبقات ترصد العملاء الذين يتعثّرون في سداد قسط مجددًا خلال 30 يومًا من انتظامهم.",
     "problem": "Customers who become current after a missed installment often miss again within 30 days, which raises expected credit losses and provisions, strains collections, and draws SAMA attention. The bank needed to find these events and see which products, segments and branches drive them.",
