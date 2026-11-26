@@ -205,6 +205,7 @@
       if (sg.c) { var c = el('code'); c.appendChild(node); node = c; }
       if (sg.i) { var i = el('em'); i.appendChild(node); node = i; }
       if (sg.b) { var b = el('strong'); b.appendChild(node); node = b; }
+      if (sg.a && safeUrl(sg.a)) { var a = el('a', { href: sg.a, target: '_blank', rel: 'noopener' }); a.appendChild(node); node = a; }
       frag.appendChild(node);
     });
     return frag;
@@ -727,7 +728,7 @@
       if (sec.kind === 'layers' || sec.kind === 'legend') grid.appendChild(n); else body.appendChild(n);
     });
     if (grid.childNodes.length) body.appendChild(grid);
-    if (!secs.length && g.intro && g.intro.length) body.appendChild(renderBlocks(g.intro, el('div', { className: 'g-content g-intro', lang: 'en', dir: 'ltr' })));
+    if (g.intro && g.intro.length) body.appendChild(renderBlocks(g.intro, el('div', { className: 'g-content g-intro', lang: 'en', dir: 'ltr' })));
     return el('section', { className: 'g-overview', 'aria-labelledby': 'g-build', lang: 'en', dir: 'ltr' }, [body]);
   }
 
@@ -909,6 +910,7 @@
     document.querySelectorAll('.g-step.collapsed').forEach(function (sec) { collapsed[sec.id] = true; });
     root.textContent = '';
     document.title = loc(g, 'title') + ' · ' + t('g.eyebrow') + ' · ' + t('name');
+    if (state.preview) root.appendChild(el('div', { className: 'g-preview-banner', role: 'status' }, [el('strong', { text: 'Preview' }), ' · this guide is not published yet. Save it from the admin page to publish it.']));
     root.appendChild(hero(g));
     root.appendChild(overview(g));
     var steps = el('div', { className: 'g-steps' }, [
@@ -965,6 +967,15 @@
     var id = new URLSearchParams(location.search).get('p') || '';
     if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(id)) { notFound('missing or invalid ?p= parameter'); return; }
     state.id = id;
+    var preview = new URLSearchParams(location.search).get('preview') === '1';
+    if (preview) {
+      var draft = null;
+      try { draft = JSON.parse(localStorage.getItem('guide-preview:' + id) || 'null'); } catch (e) {}
+      if (draft && Array.isArray(draft.steps) && draft.steps.length) {
+        state.guide = draft; state.preview = true; state.done = loadDone(); render();
+        return;
+      }
+    }
     fetch('guides/' + id + '.json', { cache: 'no-cache' })
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status + ' for guides/' + id + '.json'); return r.json(); })
       .then(function (g) {

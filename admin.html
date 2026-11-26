@@ -74,6 +74,13 @@
     .dirty-flag { font-weight: 700; color: var(--warn-text); background: var(--warn-bg); padding: .15rem .55rem; border-radius: 999px; font-size: .8rem; }
     details > summary { cursor: pointer; font-weight: 600; margin-block: .5rem; }
     .empty { text-align: center; color: var(--muted); padding: 1.5rem; }
+    .guide-box { margin: 1.2rem 0 0; padding: 1rem 1.1rem 1.1rem; border: 2px dashed var(--accent); border-radius: 12px; }
+    .guide-box legend { font-weight: 800; padding: 0 .4rem; }
+    .g-steps-table input, .g-steps-table select { width: 100%; min-width: 7rem; padding: .35rem .45rem; font: inherit; font-size: .88rem;
+      border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); }
+    .g-steps-table td { vertical-align: top; }
+    .g-steps-table td:first-child { font-weight: 800; white-space: nowrap; }
+    .g-summary { margin: .9rem 0 .4rem; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -162,6 +169,36 @@
         </div>
       </details>
 
+      <fieldset class="guide-box" id="guide-box">
+        <legend>Upload the step-by-step guide</legend>
+        <p class="hint" style="margin-top:0">Upload your guide as <b>Word (.docx)</b>, <b>Markdown (.md)</b> or <b>HTML</b>. Give every step its own heading, for example
+          <i>Step 1: Set up the workspace</i> as Heading&nbsp;2. It becomes an illustrated guide page in the same owl style as your other guides,
+          with a step map, progress tracking, copy buttons and callouts for lines that start with <i>Check</i>, <i>Pitfall</i>, <i>Commit</i> or <i>Why</i>.</p>
+        <div class="grid">
+          <div class="full"><label for="g-file">Guide file</label><input id="g-file" type="file" accept=".docx,.md,.markdown,.txt,.html,.htm"></div>
+        </div>
+        <details>
+          <summary>Guide details (optional, makes the top of the page richer)</summary>
+          <div class="grid">
+            <div class="full"><label for="g-subtitle">Subtitle <span class="hint">(defaults to the tagline)</span></label><input id="g-subtitle" type="text"></div>
+            <div><label for="g-platform">Platform chip</label><input id="g-platform" type="text" placeholder="Microsoft Fabric"></div>
+            <div><label for="g-duration">Time needed</label><input id="g-duration" type="text" placeholder="1–2 weeks, a few hours a day"></div>
+            <div class="full"><label for="g-outcomes">What you'll build <span class="hint">(one per line; defaults to the first step titles)</span></label><textarea id="g-outcomes" rows="4"></textarea></div>
+            <div class="full"><label for="g-story-lead">Story: who is the client? <span class="hint">(adds the story card with the owl)</span></label><input id="g-story-lead" type="text" placeholder="Waha Retail (fictional) sells … through 25 branches."></div>
+            <div class="full"><label for="g-story-text">Story: what is the problem?</label><textarea id="g-story-text" rows="3"></textarea></div>
+            <div><label for="g-story-quote">Story: the key question</label><input id="g-story-quote" type="text" placeholder="Are we growing faster than the market?"></div>
+            <div><label for="g-story-by">Asked by</label><input id="g-story-by" type="text" placeholder="Head of finance"></div>
+          </div>
+        </details>
+        <div id="g-result"></div>
+        <div class="row" style="margin-top:.8rem">
+          <button type="button" id="g-preview" disabled>Preview the guide page</button>
+          <button type="button" id="g-save" class="primary" disabled>Save guide to GitHub</button>
+          <button type="button" id="g-download" disabled>Download guide JSON</button>
+        </div>
+        <div id="g-msg" role="status" aria-live="polite"></div>
+      </fieldset>
+
       <div id="form-msg" role="alert"></div>
       <div class="row" style="margin-top:1rem">
         <button type="submit" class="primary">Apply changes</button>
@@ -190,6 +227,7 @@
 </main>
 
 <style>.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}</style>
+<script src="guide-converter.js"></script>
 <script>
 (function () {
   'use strict';
@@ -412,6 +450,8 @@
     }
     document.querySelectorAll('.field-error').forEach(function (n) { n.classList.remove('field-error'); });
     show('form-msg', '', '');
+    resetGuide();
+    ['g-subtitle', 'g-platform', 'g-duration', 'g-outcomes', 'g-story-lead', 'g-story-text', 'g-story-quote', 'g-story-by'].forEach(function (id) { $(id).value = ''; });
     $('editor').hidden = false;
     $('editor').scrollIntoView({ behavior: 'smooth', block: 'start' });
     $('f-title').focus({ preventScroll: true });
@@ -550,6 +590,137 @@
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
   }
+
+  /* ---------- guide upload ---------- */
+  var draftGuide = null;
+  var LAYER_LABELS = window.GuideConverter ? window.GuideConverter.LAYER_NAMES : {};
+  function guideId() { return $('f-id').value.trim(); }
+  function guideOpts() {
+    var story = { lead: $('g-story-lead').value.trim(), text: $('g-story-text').value.trim(), quote: $('g-story-quote').value.trim(), quote_by: $('g-story-by').value.trim() };
+    return {
+      id: guideId(), project_id: guideId(),
+      title: $('f-title').value.trim() || undefined,
+      subtitle: $('g-subtitle').value.trim() || $('f-tagline').value.trim(),
+      platform: $('g-platform').value.trim(), duration: $('g-duration').value.trim(),
+      repo_url: isHttpUrl($('f-repo').value.trim()) ? $('f-repo').value.trim() : '',
+      outcomes: lines($('g-outcomes').value), story: story
+    };
+  }
+  function setGuideButtons(on) { ['g-preview', 'g-save', 'g-download'].forEach(function (id) { $(id).disabled = !on; }); }
+  function resetGuide() { draftGuide = null; $('g-file').value = ''; $('g-result').textContent = ''; show('g-msg', '', ''); setGuideButtons(false); }
+
+  function renderGuideTable() {
+    var box = $('g-result'); box.textContent = '';
+    if (!draftGuide) return;
+    var real = draftGuide.steps.filter(function (s) { return s.num != null; });
+    var p = document.createElement('p'); p.className = 'g-summary';
+    p.textContent = 'Found ' + real.length + ' steps' + (draftGuide.steps.length > real.length ? ' + troubleshooting' : '') +
+      '. Check each step\'s stage, goal and owl tip (optional) below, then preview.';
+    box.appendChild(p);
+    var wrap = document.createElement('div'); wrap.className = 'table-wrap';
+    var table = document.createElement('table'); table.className = 'g-steps-table';
+    table.innerHTML = '<thead><tr><th scope="col">#</th><th scope="col">Step</th><th scope="col">Stage</th><th scope="col">Goal</th><th scope="col">Owl tip</th></tr></thead>';
+    var tb = document.createElement('tbody');
+    draftGuide.steps.forEach(function (st, i) {
+      var tr = document.createElement('tr');
+      tr.appendChild(cell(st.num != null ? st.num : '?'));
+      tr.appendChild(cell(st.title));
+      var sel = document.createElement('select'); sel.setAttribute('data-i', i); sel.setAttribute('data-f', 'layer');
+      sel.setAttribute('aria-label', 'Stage for ' + st.title);
+      window.GuideConverter.LAYERS.forEach(function (l) {
+        var o = document.createElement('option'); o.value = l; o.textContent = LAYER_LABELS[l] || l; if (l === st.layer) o.selected = true; sel.appendChild(o);
+      });
+      var td = document.createElement('td'); td.appendChild(sel); tr.appendChild(td);
+      ['goal', 'tip'].forEach(function (f) {
+        var inp = document.createElement('input'); inp.type = 'text'; inp.value = st[f] || '';
+        inp.setAttribute('data-i', i); inp.setAttribute('data-f', f); inp.setAttribute('aria-label', (f === 'goal' ? 'Goal' : 'Owl tip') + ' for ' + st.title);
+        if (f === 'tip') inp.placeholder = 'One practical tip';
+        var c = document.createElement('td'); c.appendChild(inp); tr.appendChild(c);
+      });
+      tb.appendChild(tr);
+    });
+    table.appendChild(tb); wrap.appendChild(table); box.appendChild(wrap);
+  }
+  /** Copy table edits and the details fields into the draft (no re-conversion needed). */
+  function syncGuide() {
+    if (!draftGuide) return null;
+    $('g-result').querySelectorAll('[data-f]').forEach(function (n) {
+      var st = draftGuide.steps[Number(n.getAttribute('data-i'))]; if (!st) return;
+      st[n.getAttribute('data-f')] = n.value.trim();
+    });
+    var o = guideOpts();
+    if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(o.id)) throw new Error('Fill in a valid project id first (lowercase letters, numbers and hyphens).');
+    draftGuide.id = o.id; draftGuide.project_id = o.id;
+    if (o.title) draftGuide.title = o.title;
+    draftGuide.subtitle = o.subtitle; draftGuide.platform = o.platform; draftGuide.duration = o.duration; draftGuide.repo_url = o.repo_url;
+    if (o.outcomes.length) draftGuide.outcomes = o.outcomes;
+    draftGuide.intro_sections = (draftGuide.intro_sections || []).filter(function (s) { return s.kind !== 'story'; });
+    if (o.story.lead) draftGuide.intro_sections.unshift({ kind: 'story', title: 'The story', lead: o.story.lead, text: o.story.text, quote: o.story.quote, quote_by: o.story.quote_by });
+    return draftGuide;
+  }
+  function guideJson() { return JSON.stringify(syncGuide(), null, 1) + '\n'; }
+
+  $('g-file').addEventListener('change', function () {
+    var file = this.files && this.files[0];
+    if (!file) return;
+    var id = guideId();
+    if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(id)) { show('g-msg', 'err', 'Fill in the project id first, then choose the file again.'); this.value = ''; return; }
+    if (file.size > 15 * 1024 * 1024) { show('g-msg', 'err', 'That file is over 15 MB. Remove large images from it and try again.'); return; }
+    show('g-msg', 'ok', 'Converting ' + file.name + '…');
+    setGuideButtons(false);
+    window.GuideConverter.convertFile(file, guideOpts()).then(function (g) {
+      draftGuide = g;
+      renderGuideTable();
+      setGuideButtons(true);
+      $('f-guide').value = 'guide.html?p=' + id;
+      show('g-msg', 'ok', 'Converted. The guide link above is set to guide.html?p=' + id + '. Preview it, then save the guide and the project.');
+    }).catch(function (err) { draftGuide = null; renderGuideTable(); show('g-msg', 'err', err.message || String(err)); });
+  });
+
+  $('g-preview').addEventListener('click', function () {
+    try {
+      var g = syncGuide();
+      try { localStorage.setItem('guide-preview:' + g.id, JSON.stringify(g)); }
+      catch (e) { show('g-msg', 'err', 'This browser blocked the preview storage. Use Download guide JSON instead.'); return; }
+      window.open('guide.html?p=' + encodeURIComponent(g.id) + '&preview=1', '_blank', 'noopener');
+    } catch (e) { show('g-msg', 'err', e.message); }
+  });
+
+  $('g-download').addEventListener('click', function () {
+    try {
+      var blob = new Blob([guideJson()], { type: 'application/json' });
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = draftGuide.id + '.json';
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+      show('g-msg', 'ok', 'Downloaded ' + draftGuide.id + '.json. Put it in the guides/ folder of your repo and commit it.');
+    } catch (e) { show('g-msg', 'err', e.message); }
+  });
+
+  $('g-save').addEventListener('click', function () {
+    var token = getToken();
+    if (!token) { show('g-msg', 'err', 'No token in this tab. Paste it in step 1 first (or use Download guide JSON).'); return; }
+    var json;
+    try { json = guideJson(); } catch (e) { show('g-msg', 'err', e.message); return; }
+    var id = draftGuide.id;
+    var owner = $('owner').value.trim(), repo = $('repo').value.trim(), branch = $('branch').value.trim();
+    var url = API + '/repos/' + encodeURIComponent(owner) + '/' + encodeURIComponent(repo) + '/contents/guides/' + encodeURIComponent(id) + '.json';
+    $('g-save').disabled = true;
+    show('g-msg', 'ok', 'Saving guides/' + id + '.json…');
+    fetch(url + '?ref=' + encodeURIComponent(branch), { headers: headers(token), cache: 'no-store' })
+      .then(function (r) { return r.status === 404 ? null : r.json().then(function (b) { if (!r.ok) throw new Error(explain(r.status, b)); return b.sha; }); })
+      .then(function (sha) {
+        if (sha && !confirm('A guide for “' + id + '” already exists. Replace it with this one?')) throw new Error('Not saved: the existing guide was kept.');
+        var body = { message: (sha ? 'Update' : 'Add') + ' step-by-step guide: ' + id, content: b64encode(json), branch: branch };
+        if (sha) body.sha = sha;
+        return fetch(url, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, headers(token)), body: JSON.stringify(body) })
+          .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { if (!r.ok) throw new Error(explain(r.status, b)); return b; }); });
+      })
+      .then(function () {
+        $('f-guide').value = 'guide.html?p=' + id;
+        show('g-msg', 'ok', 'Guide saved to guides/' + id + '.json. Last step: click “Apply changes”, then “Save to GitHub” so the card’s Do it yourself button opens it. The page goes live in 1–2 minutes.');
+      })
+      .catch(function (e) { show('g-msg', 'err', e.message || String(e)); })
+      .then(function () { $('g-save').disabled = false; });
+  });
 
   /* ---------- wire up ---------- */
   $('conn-form').addEventListener('submit', loadFromGitHub);

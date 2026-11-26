@@ -138,6 +138,25 @@ Every guide uses the same page, `guide.html`, which reads its content from `guid
 - **Step cards.** Each has an owl tip, copy buttons on every code block, long code folded behind *Show all*, scrollable tables, and *Previous / Next* buttons.
 - **Diagrams and a run player.** These come from the guide JSON.
 
+### Upload a guide from the admin page (easiest)
+
+You can write a guide in Word or Markdown and let the admin page turn it into a guide page in the owl style:
+
+1. Write the guide with **one heading per step**, for example *Step 1: Set up the workspace* as Heading 2 (Heading 1 also works). Anything before the first step becomes the introduction, and a heading called *Troubleshooting* or *FAQ* becomes the help section.
+2. Optional touches the converter recognises:
+   - A step that starts with *Purpose:* uses that line as its goal. Otherwise the goal is the step's first sentence.
+   - Lines starting with **Check**, **Pitfall**, **Commit**, **Why** or **Prove** become coloured callouts.
+   - Lines starting with **Cell 1:**, **Cell 2:** and so on become notebook-cell labels.
+   - Code blocks get copy buttons, and folder trees (├──) become file-tree drawings. Tables and links are kept.
+3. In **admin.html**, open the project with **Edit** (or **+ Add project**) and fill in its id. Under **Upload the step-by-step guide**, choose your `.docx`, `.md` or `.html` file.
+4. Check the table of steps. You can change each step's stage (it sets the icon and colour), its goal, and add an owl tip. *Guide details* adds the story card, platform and time chips, and the "What you'll build" list.
+5. Click **Preview the guide page**, then **Save guide to GitHub**. This writes `guides/<id>.json`.
+6. Click **Apply changes**, then **Save to GitHub**, so the card's **Do it yourself** button points to the guide.
+
+No token? Use **Download guide JSON**, put the file in `guides/` and commit it.
+
+The converter adds a clickable map of the steps automatically. Hand-drawn diagrams like the ones in the two first guides can be added afterwards by editing the JSON (see below).
+
 ### Add a guide for a new project
 
 1. Create `guides/<project-id>.json`, using the template below. The file name must match the `p=` value: lowercase letters, numbers and hyphens.
