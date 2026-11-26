@@ -337,6 +337,19 @@ nav { margin-inline-start: auto; }
 .approach .stop-label { color: #ece9f5; font-size: .78rem; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
 @media (max-width: 420px) { .cover-approach .cover-owl { width: 2.8rem; height: 2.8rem; } .approach .stop-orb { width: 2.2rem; height: 2.2rem; } .approach .stop:not(.last)::after { top: 1.1rem; } .approach .stop-label { font-size: .72rem; } }
 
+/* stack badges with logos */
+.card-block ul.stack-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: .45rem; }
+.stack-badge {
+  display: inline-flex; align-items: center; gap: .45rem; padding: .3rem .7rem .3rem .45rem; border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--border); font-size: .84rem; font-weight: 650; line-height: 1.3;
+}
+.stack-badge img, .stack-badge svg {
+  flex: none; width: 1.35rem; height: 1.35rem; padding: .17rem; border-radius: 50%; background: #fff;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 6%);
+}
+.stack-badge svg.generic { background: var(--accent-soft); color: var(--accent); box-shadow: none; }
+.card-block ul.stack-list li::marker { content: none; }
+
 /* ---------- About / contact ---------- */
 .about-grid { display: grid; gap: 2rem; }
 @media (min-width: 900px) { .about-grid { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); align-items: start; } }

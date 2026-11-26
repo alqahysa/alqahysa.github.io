@@ -65,7 +65,7 @@
       'projects.showing': 'Showing {n} of {total} projects',
       'filter.label': 'Filter projects', 'filter.all': 'All',
       'card.featured': 'Featured', 'card.problem': 'Problem', 'card.decisions': 'Approach',
-      'card.result': 'Result',
+      'card.result': 'Result', 'card.stack': 'Stack',
       'card.repo': 'Code repo', 'card.guide': 'Do it yourself', 'card.demo': 'Live demo',
       
       'about.title': "Hi, I'm Sarah",
@@ -137,7 +137,7 @@
       'projects.showing': 'عرض {n} من أصل {total} مشاريع',
       'filter.label': 'تصفية المشاريع', 'filter.all': 'الكل',
       'card.featured': 'مميّز', 'card.problem': 'المشكلة', 'card.decisions': 'المنهجية',
-      'card.result': 'النتيجة',
+      'card.result': 'النتيجة', 'card.stack': 'التقنيات',
       'card.repo': 'مستودع الكود', 'card.guide': 'طبّقها بنفسك', 'card.demo': 'عرض حي',
       
       'about.title': 'أهلًا، أنا سارة',
@@ -529,6 +529,42 @@
     return 'pipeline';
   }
 
+  /* Stack badges: official logo where an open-source icon exists (assets/logos/), otherwise a neutral icon. */
+  var STACK_LOGOS = {
+    'python': 'python', 'git': 'git', 'github': 'githubactions', 'github actions': 'githubactions',
+    'telegram': 'telegram', 'telegram bot api': 'telegram',
+    'pyspark': 'apachespark', 'apache spark': 'apachespark', 'spark': 'apachespark',
+    'azure': 'azure', 'adls gen2': 'azure', 'azure data lake storage': 'azure',
+    'data factory': 'azuredatafactory', 'azure data factory': 'azuredatafactory',
+    'databricks': 'databricks', 'azure databricks': 'databricks', 'unity catalog': 'databricks', 'auto loader': 'databricks',
+    'lakeflow jobs': 'databricks', 'asset bundles': 'databricks', 'databricks asset bundles': 'databricks', 'genie': 'databricks',
+    'microsoft fabric': 'microsoftfabric.png', 'fabric': 'microsoftfabric.png',
+    'power bi': 'powerbi.png', 'delta lake': 'deltalake.png', 'delta': 'deltalake.png'
+  };
+  var STACK_GENERIC = [
+    [/power ?bi|dashboard|report/i, 'M4 20V10M10 20V4M16 20v-7M22 20H2'],
+    [/delta|lake|warehouse|sql|database/i, 'M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zM4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3'],
+    [/fabric|platform/i, 'm12 3 9 5-9 5-9-5zM3 13l9 5 9-5M3 17.5l9 5 9-5'],
+    [/./, 'M12 3 4.5 7v10L12 21l7.5-4V7z']
+  ];
+  function stackBadge(name) {
+    var key = String(name).toLowerCase().replace(/\s*\(.*\)\s*/g, ' ').trim();
+    var logo = STACK_LOGOS[key];
+    var mark;
+    if (logo) {
+      mark = el('img', { src: 'assets/logos/' + (/\.\w+$/.test(logo) ? logo : logo + '.svg'), alt: '', width: '18', height: '18', loading: 'lazy', decoding: 'async' });
+    } else {
+      var d = STACK_GENERIC.filter(function (g) { return g[0].test(name); })[0][1];
+      mark = document.createElementNS(SVG_NS, 'svg');
+      mark.setAttribute('viewBox', '0 0 24 24'); mark.setAttribute('aria-hidden', 'true'); mark.setAttribute('class', 'generic');
+      var path = document.createElementNS(SVG_NS, 'path');
+      path.setAttribute('d', d); path.setAttribute('fill', 'none'); path.setAttribute('stroke', 'currentColor');
+      path.setAttribute('stroke-width', '2'); path.setAttribute('stroke-linejoin', 'round'); path.setAttribute('stroke-linecap', 'round');
+      mark.appendChild(path);
+    }
+    return el('li', { className: 'stack-badge', dir: 'ltr' }, [mark, el('span', { text: name })]);
+  }
+
   function buildCard(p) {
     var title = String(field(p, 'title')).trim();
     var titleId = 'project-' + slug(p.id) + '-title';
@@ -564,6 +600,11 @@
     var resultBlock = isNonEmptyString(result) ? el('div', { className: 'card-result' }, [
       el('h4', { text: t('card.result') }), el('p', { text: result.trim() })
     ]) : null;
+    var stack = toStringArray(p.stack);
+    var stackBlock = stack.length ? el('section', { className: 'card-block' }, [
+      el('h4', { text: t('card.stack') }),
+      el('ul', { className: 'stack-list' }, stack.map(stackBadge))
+    ]) : null;
 
     var guideLabel = state.lang === 'ar' && isNonEmptyString(p.guide_label_ar) ? p.guide_label_ar
       : (state.lang === 'en' && isNonEmptyString(p.guide_label) ? p.guide_label : t('card.guide'));
@@ -574,7 +615,7 @@
     ]);
 
     var body = el('div', { className: 'card-body' }, [
-      header, problemBlock, approach, resultBlock, links.childNodes.length ? links : null
+      header, problemBlock, approach, resultBlock, stackBlock, links.childNodes.length ? links : null
     ]);
     return el('article', { className: 'card', id: 'project-' + slug(p.id), 'aria-labelledby': titleId }, [cover, body]);
   }

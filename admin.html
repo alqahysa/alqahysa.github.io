@@ -142,6 +142,7 @@
         <div class="full"><label for="f-problem">Problem <span class="hint">(2–3 sentences)</span></label><textarea id="f-problem" required></textarea></div>
         <div class="full"><label for="f-highlights">Approach <span class="hint">(one per line; up to 4 are shown; describe what you did and why, not which tool)</span></label><textarea id="f-highlights" rows="5" required></textarea></div>
         <div class="full"><label for="f-result">Result <span class="hint">(one sentence with a number: the outcome, not the tooling)</span></label><input id="f-result" type="text" required></div>
+        <div class="full"><label for="f-stack">Stack <span class="hint">(comma-separated; shown as logo badges, e.g. Python, PySpark, Power BI)</span></label><input id="f-stack" type="text" placeholder="Microsoft Fabric, PySpark, Delta Lake, Power BI"></div>
         <div class="full"><label for="f-repo">Repository URL</label><input id="f-repo" type="url" required placeholder="https://github.com/alqahysa/…"></div>
         <div class="full"><label for="f-guide">Step-by-step guide link <span class="hint">(recommended; for a guide page on this site use guide.html?p=&lt;id&gt; and add guides/&lt;id&gt;.json)</span></label><input id="f-guide" type="text" spellcheck="false" placeholder="guide.html?p=my-project"></div>
         <div class="full"><label for="f-guide-label">Guide button text <span class="hint">(optional; default “Do it yourself”)</span></label><input id="f-guide-label" type="text"></div>
@@ -401,6 +402,7 @@
     $('f-highlights').value = Array.isArray(p.highlights) ? p.highlights.join('\n') : (p.highlights || '');
     $('f-highlights-ar').value = Array.isArray(p.highlights_ar) ? p.highlights_ar.join('\n') : (p.highlights_ar || '');
     $('f-cover').value = Array.isArray(p.cover_steps) ? p.cover_steps.map(function (c) { return [c.icon || '', c.label || '', c.label_ar || ''].join(' | ').replace(/\s\|\s$/, ''); }).join('\n') : '';
+    $('f-stack').value = Array.isArray(p.stack) ? p.stack.join(', ') : (p.stack || '');
     $('f-featured').checked = p.featured === true;
     if (index == null) {
       var max = state.projects.reduce(function (m, x) { var o = Number(x.order); return isFinite(o) && o > m ? o : m; }, 0);
@@ -440,6 +442,7 @@
       need(COVER_ICONS.indexOf(c.icon) !== -1, 'Approach line ' + (i + 1) + ': unknown icon “' + c.icon + '”. Use one of: ' + COVER_ICONS.join(', ') + '.', 'f-cover');
       need(c.label.length > 0 && c.label.length <= 24, 'Approach line ' + (i + 1) + ': add an English label of up to 24 characters.', 'f-cover');
     });
+    need(d.stack.length <= 12, 'Keep the stack to 12 items or fewer.', 'f-stack');
     need(d.title.length > 0, 'Title is required.', 'f-title');
     need(d.title.length <= 140, 'Title is too long (max 140 characters).', 'f-title');
     need(d.tagline.length > 0, 'Tagline is required.', 'f-tagline');
@@ -468,6 +471,7 @@
       category: $('f-category').value.trim(), category_ar: $('f-category-ar').value.trim(), guide_label_ar: $('f-guide-label-ar').value.trim(), demo_url: $('f-demo').value.trim(),
       order: $('f-order').value.trim(), featured: $('f-featured').checked,
       cover_raw: lines($('f-cover').value),
+      stack: $('f-stack').value.split(',').map(function (x) { return x.trim(); }).filter(Boolean),
       title_ar: $('f-title-ar').value.trim(), tagline_ar: $('f-tagline-ar').value.trim(), problem_ar: $('f-problem-ar').value.trim(),
       highlights_ar: lines($('f-highlights-ar').value), result_ar: $('f-result-ar').value.trim()
     };
@@ -485,18 +489,18 @@
     var base = state.editingIndex == null ? {} : Object.assign({}, state.projects[state.editingIndex]);
     var out = {
       id: d.id, title: d.title, category: d.category, category_ar: d.category_ar, cover_steps: d.cover_steps.length ? d.cover_steps : undefined, tagline: d.tagline, problem: d.problem,
-      highlights: d.highlights, result: d.result, repo_url: d.repo_url, guide_url: d.guide_url, guide_label: d.guide_label, guide_label_ar: d.guide_label_ar, demo_url: d.demo_url,
+      highlights: d.highlights, result: d.result, stack: d.stack.length ? d.stack : undefined, repo_url: d.repo_url, guide_url: d.guide_url, guide_label: d.guide_label, guide_label_ar: d.guide_label_ar, demo_url: d.demo_url,
       featured: d.featured, order: d.order === '' ? undefined : Number(d.order),
       title_ar: d.title_ar, tagline_ar: d.tagline_ar, problem_ar: d.problem_ar,
       highlights_ar: d.highlights_ar, result_ar: d.result_ar
     };
     Object.keys(out).forEach(function (k) { base[k] = out[k]; });
     // Drop empty optional fields to keep the JSON tidy.
-    ['cover_steps', 'category_ar', 'guide_url', 'guide_label', 'guide_label_ar', 'demo_url', 'order', 'title_ar', 'tagline_ar', 'problem_ar', 'result_ar']
+    ['stack', 'cover_steps', 'category_ar', 'guide_url', 'guide_label', 'guide_label_ar', 'demo_url', 'order', 'title_ar', 'tagline_ar', 'problem_ar', 'result_ar']
       .forEach(function (k) { if (base[k] === '' || base[k] === undefined) delete base[k]; });
     if (!base.highlights_ar.length) delete base.highlights_ar;
     // Tools, code and screenshots are no longer shown on cards, so old fields are dropped.
-    ['platform', 'stack', 'code_snippet', 'image', 'image_alt', 'image_alt_ar'].forEach(function (k) { delete base[k]; });
+    ['platform', 'code_snippet', 'image', 'image_alt', 'image_alt_ar'].forEach(function (k) { delete base[k]; });
 
     if (state.editingIndex == null) state.projects.push(base); else state.projects[state.editingIndex] = base;
     setDirty(true);

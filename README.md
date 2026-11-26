@@ -63,6 +63,7 @@ Remove the project's whole `{ ... }` block **and the comma that separated it** f
     "Approach point 3"
   ],
   "result": "One sentence with a number, e.g. Monthly reporting went from 3 days to 20 minutes.",
+  "stack": ["Microsoft Fabric", "PySpark", "Delta Lake", "Power BI"],
   "repo_url": "https://github.com/alqahysa/my-new-project",
   "guide_url": "https://claude.ai/artifact/your-guide-link",
   "demo_url": "",
@@ -73,7 +74,7 @@ Remove the project's whole `{ ... }` block **and the comma that separated it** f
 
 ### Field reference
 
-Every card has the same design and size: a night-sky header where the owl sits at the start of the project's **approach strip** (2–4 illustrated stops), then **Problem → Approach → Result**, then the buttons. Cards describe the approach and the result, not the tools, so there are no tool tags, code snippets or screenshots on the cards (those belong in the repo and the guide).
+Every card has the same design and size: a night-sky header where the owl sits at the start of the project's **approach strip** (2–4 illustrated stops), then **Problem → Approach → Result**, then the buttons. Cards describe the approach and the result, then list the **Stack** as badges with logos. Code snippets and screenshots belong in the repo and the guide.
 
 | Field | Required | Notes |
 |---|---|---|
@@ -85,6 +86,7 @@ Every card has the same design and size: a night-sky header where the owl sits a
 | `problem` | recommended | 2–3 sentences: the business problem. |
 | `highlights` | recommended | The **Approach**: 3–4 short points on what you did and why. The card shows up to 4. |
 | `result` | recommended | One sentence, ideally with a number. |
+| `stack` | recommended | Array of technologies, shown as badges. A known name gets its logo from `assets/logos/`; any other name gets a neutral icon. To add a logo, see `assets/logos/README.md`. |
 | `repo_url` | recommended | Must start with `https://`. Adds a **Code repo** button. |
 | `guide_url` | recommended | Link to the step-by-step guide. Adds a gold **Do it yourself** button. |
 | `guide_label` | optional | Custom text for the guide button (default “Do it yourself”). |
