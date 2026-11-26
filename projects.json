@@ -24,7 +24,7 @@
     "result": "About 166,000 orders over 36 months now refresh automatically every month, with 5 data-quality checks on every run and no manual merging.",
     "result_ar": "نحو 166 ألف طلب على مدى 36 شهرًا تتحدّث تلقائيًا كل شهر، مع 5 فحوصات لجودة البيانات في كل تشغيل ودون أي دمج يدوي.",
     "repo_url": "https://github.com/alqahysa/fabric-saudi-retail-analytics",
-    "guide_url": "https://claude.ai/artifact/24d5PkCMCVYeuNj3FCTXCG",
+    "guide_url": "guide.html?p=fabric-saudi-retail-analytics",
     "demo_url": "",
     "featured": true,
     "order": 1
@@ -54,7 +54,7 @@
     "result": "26.67% of delinquency events recur within 30 days in the sample data; the highest-rate branch is Jeddah Tahlia at 66.67%, and credit cards drive half of all re-delinquencies.",
     "result_ar": "تتكرر 26.67% من حالات التعثّر خلال 30 يومًا في بيانات العيّنة؛ وأعلى الفروع نسبةً فرع جدة التحلية بنسبة 66.67%، وتقف البطاقات الائتمانية وراء نصف حالات تكرار التعثّر.",
     "repo_url": "https://github.com/alqahysa/azure-databricks-najd-bank-redelinquency",
-    "guide_url": "https://claude.ai/artifact/6qCA57iA72yugJDWF7ox5h",
+    "guide_url": "guide.html?p=databricks-najd-bank-redelinquency",
     "demo_url": "",
     "featured": true,
     "order": 2

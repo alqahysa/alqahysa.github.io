@@ -450,8 +450,9 @@
     path.setAttribute('d', iconPath); path.setAttribute('fill', 'none'); path.setAttribute('stroke', 'currentColor');
     path.setAttribute('stroke-width', '2'); path.setAttribute('stroke-linecap', 'round'); path.setAttribute('stroke-linejoin', 'round');
     icon.appendChild(path);
-    return el('a', { className: 'btn ' + cls, href: href, target: '_blank', rel: 'noopener' }, [
-      icon, label, el('span', { className: 'sr-only', text: ' ' + t('opensNewTab') })
+    var external = /^https?:\/\//i.test(href) && new URL(href, document.baseURI).origin !== location.origin;
+    return el('a', external ? { className: 'btn ' + cls, href: href, target: '_blank', rel: 'noopener' } : { className: 'btn ' + cls, href: href }, [
+      icon, label, external ? el('span', { className: 'sr-only', text: ' ' + t('opensNewTab') }) : null
     ]);
   }
   var ICON_CODE = 'm8 7-5 5 5 5M16 7l5 5-5 5';

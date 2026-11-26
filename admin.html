@@ -142,7 +142,7 @@
         <div class="full"><label for="f-highlights">Approach <span class="hint">(one per line; up to 4 are shown; describe what you did and why, not which tool)</span></label><textarea id="f-highlights" rows="5" required></textarea></div>
         <div class="full"><label for="f-result">Result <span class="hint">(one sentence with a number: the outcome, not the tooling)</span></label><input id="f-result" type="text" required></div>
         <div class="full"><label for="f-repo">Repository URL</label><input id="f-repo" type="url" required placeholder="https://github.com/alqahysa/…"></div>
-        <div class="full"><label for="f-guide">Step-by-step guide URL <span class="hint">(recommended; must be shared publicly)</span></label><input id="f-guide" type="url" placeholder="https://claude.ai/artifact/…"></div>
+        <div class="full"><label for="f-guide">Step-by-step guide link <span class="hint">(recommended; for a guide page on this site use guide.html?p=&lt;id&gt; and add guides/&lt;id&gt;.json)</span></label><input id="f-guide" type="text" spellcheck="false" placeholder="guide.html?p=my-project"></div>
         <div class="full"><label for="f-guide-label">Guide button text <span class="hint">(optional; default “Step-by-step guide”)</span></label><input id="f-guide-label" type="text"></div>
         <div class="full"><label for="f-demo">Demo URL <span class="hint">(optional)</span></label><input id="f-demo" type="url"></div>
       </div>
@@ -437,7 +437,7 @@
     need(d.highlights.length <= 4, 'Keep the approach to 4 points or fewer (the card shows up to 4).', 'f-highlights');
     need(d.result.length > 0, 'Result is required.', 'f-result');
     need(isHttpUrl(d.repo_url), 'Repository URL must start with https://', 'f-repo');
-    need(!d.guide_url || isHttpUrl(d.guide_url), 'Guide URL must be empty or start with https://', 'f-guide');
+    need(!d.guide_url || isHttpUrl(d.guide_url) || /^guide\.html\?p=[a-z0-9]+(-[a-z0-9]+)*$/.test(d.guide_url), 'Guide link must be empty, guide.html?p=<project-id>, or start with https://', 'f-guide');
     need(d.guide_label.length <= 40, 'Guide button text is long; keep it under 40 characters.', 'f-guide-label');
     need(d.category.length > 0, 'Category is required (for example Data Engineering or AI / Machine Learning).', 'f-category');
     need(d.category.length <= 40, 'Category is long; keep it under 40 characters.', 'f-category');

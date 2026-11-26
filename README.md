@@ -9,6 +9,10 @@ index.html      page structure (owl hero scene, approach-based skills, projects 
 styles.css      all styling (light/dark, responsive, RTL-ready)
 app.js          theme, English/Arabic toggle, the owl's tips + eye tracking, renders projects.json
 projects.json   ALL project content lives here
+guide.html      the step-by-step guide page (one page for every guide: guide.html?p=<id>)
+guide.css       guide-only styling (diagrams, steps, progress owl)
+guide.js        renders a guide from guides/<id>.json
+guides/         one JSON file per guide
 admin.html      optional form UI that edits projects.json through the GitHub API
 assets/         favicon.svg, og-image.png (social preview), cv.pdf
 .nojekyll       tells GitHub Pages to serve files as-is
@@ -85,7 +89,7 @@ Optional or empty fields are simply left off the card. You can delete them from 
 
 **Arabic (optional):** add `title_ar`, `category_ar`, `tagline_ar`, `problem_ar`, `highlights_ar`, `result_ar` and `guide_label_ar`. These are shown when a visitor switches to العربية. Any missing Arabic field falls back to the English one.
 
-**Step-by-step guides:** each project can link to a guide (`guide_url`). If a guide is a Claude artifact, open it on claude.ai, click **Share**, and make it viewable by anyone with the link. Then open the link in a private/incognito window to confirm it opens without signing in.
+**Step-by-step guides:** each project links to its guide with `guide_url`. For a guide hosted on this site, use `guide.html?p=<project-id>` (see *Step-by-step guide pages* below). Any `https://` link also works; if it's a Claude artifact, share it publicly so visitors don't hit a sign-in page.
 
 ### ⚠️ Validate before you commit
 
@@ -112,6 +116,60 @@ If the site ever shows "The projects could not be loaded right now", the file is
 The token is kept **only in `sessionStorage`** for that browser tab. It is never stored in the code or in the repository, and it disappears when you close the tab or press *Forget token*. Never paste the token into any file. If you'd rather not use a token, click **Load the published file**, make your edits, then **Download JSON** and upload the file to the repo yourself.
 
 If you don't want the admin page at all, just delete `admin.html`. Nothing else depends on it.
+
+---
+
+## Step-by-step guide pages
+
+Every guide uses the same page, `guide.html`, which reads its content from `guides/<id>.json`. For example, `guide.html?p=fabric-saudi-retail-analytics` opens `guides/fabric-saudi-retail-analytics.json`. The page gives every guide the owl theme automatically:
+
+- **Hero with a progress owl.** Visitors tick **Mark step as done**. The ring fills, and at 100% the owl puts on a graduation cap. Progress is saved in the visitor's own browser.
+- **Interactive architecture map.** Boxes with a gold *Step N* tag jump to that step when clicked.
+- **Step list.** It highlights where you are, shows ✓ for finished steps, and has *Expand all / Collapse all*.
+- **Step cards.** Each has an owl tip, copy buttons on every code block, long code folded behind *Show all*, scrollable tables, and *Previous / Next* buttons.
+- **Diagrams and a run player.** These come from the guide JSON.
+
+### Add a guide for a new project
+
+1. Create `guides/<project-id>.json`, using the template below. The file name must match the `p=` value: lowercase letters, numbers and hyphens.
+2. In `projects.json`, set that project's `"guide_url": "guide.html?p=<project-id>"`.
+3. Validate the JSON on jsonlint.com, commit and push.
+
+```json
+{
+  "id": "my-project",
+  "project_id": "my-project",
+  "title": "Guide title",
+  "subtitle": "One sentence: what the reader will build.",
+  "platform": "Main platform (optional)",
+  "duration": "1–2 weeks (optional)",
+  "repo_url": "https://github.com/alqahysa/my-project",
+  "outcomes": ["What they'll have at the end", "Another outcome"],
+  "architecture": null,
+  "intro": [
+    { "type": "p", "segs": [{ "t": "Intro paragraph. " }, { "t": "Bold part", "b": 1 }] }
+  ],
+  "steps": [
+    {
+      "id": "step-1", "num": "1", "title": "First step", "layer": "setup",
+      "tip": "One practical owl tip.",
+      "blocks": [
+        { "type": "p", "segs": [{ "t": "Explain the step. Use " }, { "t": "inline code", "c": 1 }, { "t": " like this." }] },
+        { "type": "ol", "items": [[{ "type": "p", "segs": [{ "t": "Do this first" }] }], [{ "type": "p", "segs": [{ "t": "Then this" }] }]] },
+        { "type": "code", "lang": "python", "text": "print('hello')" },
+        { "type": "h", "level": 3, "text": "A sub-heading" },
+        { "type": "table", "head": [[{ "t": "Column" }], [{ "t": "Meaning" }]], "rows": [[[{ "t": "a" }], [{ "t": "b" }]]] }
+      ]
+    }
+  ]
+}
+```
+
+- **Block types:** `p` (text segments; `b` = bold, `i` = italic, `c` = code), `h`, `ul` / `ol`, `code`, `table`, `quote`, and `diagram`.
+- **Layers:** a step's `layer` sets its coloured label. Use one of `setup`, `data`, `bronze`, `silver`, `gold`, `incremental`, `orchestration`, `bi`, `quality`, `cicd`, `ship`, `business`, `modeling`, `architecture`, `governance`, `testing`, `ai` or `help`.
+- **Optional Arabic:** `title_ar`, `subtitle_ar`, `duration_ar`, `outcomes_ar` and each step's `tip_ar`. The step details stay in English, the same language as the tools.
+
+**Diagrams** are small JSON drawings: boxes on a grid joined by arrows. Copy one from an existing guide file and edit it. Each box has `col` and `row`, and optionally `sub`, `step` (adds a clickable *Step N* tag), `tone` (`bronze`/`silver`/`gold`), `main`, `alert`, `span` or `shape: "diamond"`. Edges join two boxes, with an optional `label`. Set `kind` to `ok`, `fail` or `line` (a line without an arrowhead). Set `route` to `around` to send the arrow round the outside. `groups` draws a labelled frame around some of the boxes. A `datastory` diagram becomes the **Play the run** player: a list of `stages`, each with `title`, `text`, `head`, `rows` and `hl` (the rows to highlight).
 
 ---
 

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Step-by-step guide · Sarah A. AlQahtani</title>
+  <meta name="description" content="Illustrated, interactive step-by-step guides to Sarah A. AlQahtani's data and AI engineering projects: architecture, code, checks and progress tracking.">
+  <meta name="author" content="Sarah A. AlQahtani">
+  <meta name="theme-color" content="#f6f5fb">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Sarah A. AlQahtani">
+  <meta property="og:title" content="Step-by-step guide · Sarah A. AlQahtani">
+  <meta property="og:description" content="Build it yourself: an illustrated, interactive step-by-step guide with code, diagrams and progress tracking.">
+  <meta property="og:image" content="https://alqahysa.github.io/assets/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="guide.css">
+  <script>
+    (function () {
+      var d = document.documentElement, theme = null, lang = null;
+      try { theme = localStorage.getItem('theme'); lang = localStorage.getItem('lang'); } catch (e) {}
+      var qs = new URLSearchParams(location.search).get('lang');
+      if (qs === 'ar' || qs === 'en') lang = qs;
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      d.setAttribute('data-theme', theme);
+      if (lang === 'ar') { d.lang = 'ar'; d.dir = 'rtl'; }
+    })();
+  </script>
+  <script src="guide.js" defer></script>
+</head>
+<body class="guide-page">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="owl-mini" viewBox="0 0 64 64">
+        <path d="M14 18 10 4l12 9z M50 18l4-14-12 9z" fill="#17141f"/>
+        <ellipse cx="32" cy="42" rx="19" ry="19" fill="#17141f"/>
+        <circle cx="32" cy="27" r="19" fill="#17141f"/>
+        <ellipse cx="32" cy="46" rx="11" ry="12" fill="#2b2636"/>
+        <circle cx="24" cy="26" r="8.5" fill="#2b2636"/><circle cx="40" cy="26" r="8.5" fill="#2b2636"/>
+        <circle cx="24" cy="26" r="6.5" fill="#f5b83d"/><circle cx="40" cy="26" r="6.5" fill="#f5b83d"/>
+        <circle cx="24.6" cy="26.4" r="3.3" fill="#0d0b12"/><circle cx="40.6" cy="26.4" r="3.3" fill="#0d0b12"/>
+        <circle cx="23.4" cy="24.6" r="1.2" fill="#fff"/><circle cx="39.4" cy="24.6" r="1.2" fill="#fff"/>
+        <path d="M32 31l-3 3.2 3 3.2 3-3.2z" fill="#f08a3c"/>
+      </symbol>
+      <symbol id="owl-sleepy" viewBox="0 0 64 64">
+        <path d="M14 18 10 4l12 9z M50 18l4-14-12 9z" fill="#17141f"/>
+        <ellipse cx="32" cy="42" rx="19" ry="19" fill="#17141f"/>
+        <circle cx="32" cy="27" r="19" fill="#17141f"/>
+        <ellipse cx="32" cy="46" rx="11" ry="12" fill="#2b2636"/>
+        <circle cx="24" cy="26" r="8.5" fill="#2b2636"/><circle cx="40" cy="26" r="8.5" fill="#2b2636"/>
+        <path d="M19 26q5 4 10 0M35 26q5 4 10 0" fill="none" stroke="#f5b83d" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M32 31l-3 3.2 3 3.2 3-3.2z" fill="#f08a3c"/>
+        <ellipse cx="19" cy="34" rx="3" ry="1.8" fill="#ff8fa3" opacity=".45"/><ellipse cx="45" cy="34" rx="3" ry="1.8" fill="#ff8fa3" opacity=".45"/>
+      </symbol>
+      <symbol id="owl-grad" viewBox="0 0 64 64">
+        <use href="#owl-mini"/>
+        <path d="M32 2 52 10 32 18 12 10z" fill="#5a3dd0"/>
+        <path d="M22 13v6c6 4 14 4 20 0v-6l-10 4z" fill="#462cb0"/>
+        <path d="M50 10v10" stroke="#f5b83d" stroke-width="2"/><circle cx="50" cy="21" r="2.2" fill="#f5b83d"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <div class="read-progress" aria-hidden="true"><span id="read-bar"></span></div>
+  <a class="skip-link" href="#main" data-i18n="skip">Skip to main content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html">
+        <svg class="brand-owl" aria-hidden="true"><use href="#owl-mini"/></svg>
+        <span class="brand-name" data-i18n="name">Sarah A. AlQahtani</span>
+      </a>
+      <nav aria-label="Guide" data-i18n-attr="aria-label:nav.label">
+        <ul class="nav-links">
+          <li><a href="index.html#projects" data-i18n="nav.back">← All projects</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button type="button" class="icon-btn lang-btn" id="lang-toggle" lang="ar" aria-label="عرض الصفحة بالعربية">عربي</button>
+        <button type="button" class="icon-btn" id="theme-toggle" aria-label="Switch to night mode">
+          <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+          <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <div id="guide-root">
+      <div class="container g-loading" id="guide-status" role="status" aria-live="polite">
+        <p data-i18n="g.loading">Loading the guide…</p>
+      </div>
+    </div>
+    <noscript>
+      <div class="container"><p class="notice">This interactive guide needs JavaScript. You can read the project on
+        <a href="https://github.com/alqahysa">GitHub</a>.</p></div>
+    </noscript>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>© <span id="year">2026</span> <span data-i18n="name">Sarah A. AlQahtani</span> · <a href="index.html" data-i18n="footer.portfolio">Portfolio</a></p>
+      <p class="muted" data-i18n="footer.built">Built with plain HTML, CSS, JavaScript and one night owl. Hosted on GitHub Pages.</p>
+    </div>
+  </footer>
+</body>
+</html>

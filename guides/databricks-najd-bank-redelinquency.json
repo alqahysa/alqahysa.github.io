@@ -1,0 +1,8459 @@
+{
+ "id": "databricks-najd-bank-redelinquency",
+ "project_id": "databricks-najd-bank-redelinquency",
+ "title": "Najd National Bank: 30-Day Re-Delinquency on Azure Databricks",
+ "title_ar": "بنك نجد الوطني: تكرار التعثّر خلال 30 يومًا على Azure Databricks",
+ "subtitle": "Build a governed medallion lakehouse that flags customers who miss an installment again within 30 days, with PDPL masking, CI/CD and Genie on top.",
+ "subtitle_ar": "ابنِ منصة Lakehouse محكومة بمعمارية Medallion ترصد العملاء الذين يتعثّرون مجددًا خلال 30 يومًا، مع إخفاء البيانات وفق نظام حماية البيانات الشخصية وCI/CD وGenie.",
+ "platform": "Azure Databricks",
+ "repo_url": "https://github.com/alqahysa/azure-databricks-najd-bank-redelinquency",
+ "outcomes": [
+  "Unity Catalog with bronze / silver / gold schemas",
+  "Auto Loader ingestion + streaming MERGE",
+  "PDPL-compliant masking in silver",
+  "30-day re-delinquency flag and KPI table",
+  "Asset Bundles + GitHub Actions CI/CD",
+  "Genie space and AI/BI dashboard"
+ ],
+ "outcomes_ar": [
+  "Unity Catalog بمخططات bronze / silver / gold",
+  "استيعاب عبر Auto Loader مع MERGE بالبث",
+  "إخفاء البيانات في Silver وفق نظام حماية البيانات الشخصية",
+  "علامة تكرار التعثّر خلال 30 يومًا وجدول المؤشرات",
+  "CI/CD عبر Asset Bundles وGitHub Actions",
+  "مساحة Genie ولوحة AI/BI"
+ ],
+ "architecture": {
+  "type": "flow",
+  "title": "Nightly core-banking extracts become re-delinquency KPIs",
+  "colW": 230,
+  "cols": 3,
+  "groups": [
+   {
+    "label": "Real source · simulated here by uploading CSVs",
+    "nodes": [
+     "core",
+     "adf",
+     "stg"
+    ],
+    "dashed": true
+   },
+   {
+    "label": "Azure Databricks · Unity Catalog: banking · Lakeflow Job",
+    "nodes": [
+     "br",
+     "sv",
+     "gd"
+    ],
+    "main": true
+   }
+  ],
+  "nodes": [
+   {
+    "id": "core",
+    "col": 0,
+    "row": 0,
+    "label": "Core banking system",
+    "sub": "customers, loans, arrears"
+   },
+   {
+    "id": "adf",
+    "col": 1,
+    "row": 0,
+    "label": "Azure Data Factory",
+    "sub": "nightly extract, CSV per entity"
+   },
+   {
+    "id": "stg",
+    "col": 2,
+    "row": 0,
+    "label": "ADLS Gen2 staging",
+    "sub": "data/staging/[entity]/",
+    "step": "8"
+   },
+   {
+    "id": "br",
+    "col": 0,
+    "row": 1,
+    "label": "Bronze",
+    "sub": "Auto Loader · banking.bronze",
+    "step": "9",
+    "tone": "bronze"
+   },
+   {
+    "id": "sv",
+    "col": 1,
+    "row": 1,
+    "label": "Silver",
+    "sub": "dedupe, PDPL masking, MERGE",
+    "step": "10",
+    "tone": "silver"
+   },
+   {
+    "id": "gd",
+    "col": 2,
+    "row": 1,
+    "label": "Gold",
+    "sub": "30-day flag + KPI table",
+    "step": "11",
+    "tone": "gold",
+    "main": true
+   },
+   {
+    "id": "one",
+    "col": 0,
+    "row": 2,
+    "label": "Databricks One",
+    "sub": "business users open it here",
+    "step": "16"
+   },
+   {
+    "id": "genie",
+    "col": 1,
+    "row": 2,
+    "label": "Genie space",
+    "sub": "plain-English questions",
+    "step": "15"
+   },
+   {
+    "id": "dash",
+    "col": 2,
+    "row": 2,
+    "label": "AI/BI dashboard",
+    "sub": "4 visuals, published",
+    "step": "16"
+   }
+  ],
+  "edges": [
+   {
+    "from": "core",
+    "to": "adf"
+   },
+   {
+    "from": "adf",
+    "to": "stg"
+   },
+   {
+    "from": "stg",
+    "to": "br",
+    "label": "Auto Loader"
+   },
+   {
+    "from": "br",
+    "to": "sv"
+   },
+   {
+    "from": "sv",
+    "to": "gd"
+   },
+   {
+    "from": "sv",
+    "to": "genie"
+   },
+   {
+    "from": "gd",
+    "to": "dash"
+   },
+   {
+    "from": "genie",
+    "to": "one"
+   }
+  ]
+ },
+ "intro": [
+  {
+   "type": "p",
+   "segs": [
+    {
+     "t": "This guide builds a 30-day re-delinquency pipeline for Najd National Bank, a fictional Saudi retail bank, on Azure Databricks. It follows the 16 steps of the healthcare readmissions reference project, in the same order, with the same tools. You start from an empty repo: each step adds only its own files and ends with a commit. Replace "
+    },
+    {
+     "t": "<storage-account>",
+     "c": 1
+    },
+    {
+     "t": " and "
+    },
+    {
+     "t": "<workspace-host>",
+     "c": 1
+    },
+    {
+     "t": " everywhere."
+    }
+   ]
+  }
+ ],
+ "steps": [
+  {
+   "id": "step-1",
+   "num": "1",
+   "title": "Business problem",
+   "layer": "business",
+   "tip": "Get a worked example signed off (cured 12 July, missed 27 July = re-delinquent) before writing any code.",
+   "tip_ar": "اعتمد مثالًا محلولًا (انتظم 12 يوليو وتعثّر 27 يوليو = تكرار تعثّر) قبل كتابة أي كود.",
+   "blocks": [
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Purpose:",
+       "b": 1
+      },
+      {
+       "t": " agree in writing what the business wants before any resource is built."
+      }
+     ]
+    },
+    {
+     "type": "h",
+     "level": 3,
+     "text": "The problem, in the business user's words"
+    },
+    {
+     "type": "quote",
+     "blocks": [
+      {
+       "type": "p",
+       "segs": [
+        {
+         "t": "We run personal finance, auto finance, credit cards and home finance (Murabaha, Tawarruq and Ijara) through branches in Riyadh, Jeddah, Dammam, Makkah, Madinah, Khobar, Abha and Tabuk. When a customer misses an installment, collections chase them until they pay and become current again. We count that as a win."
+        }
+       ]
+      },
+      {
+       "type": "p",
+       "segs": [
+        {
+         "t": "The trouble is that many of these \"cured\" customers miss again within a month. We call this 30-day re-delinquency. Each repeat pushes up expected credit losses under IFRS 9, so provisions go up. It also sends the same customers back to the same collectors, which wastes team capacity."
+        }
+       ]
+      },
+      {
+       "type": "p",
+       "segs": [
+        {
+         "t": "SAMA reviews our arrears and provisioning. A high repeat rate in one product or region draws questions we cannot answer today, because the data sits in the core banking system and in spreadsheets that do not agree."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "h",
+     "level": 3,
+     "text": "Business goals locked with the business user"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Identify 30-day re-delinquencies: a new missed installment whose due date falls 0–30 days after the same customer cured the previous delinquency on the same product."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Highlight the products and customer segments (Retail / Affluent / Private, Saudi / Expat) that drive most of them."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Compare performance across branches, relationship managers and regions."
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "h",
+     "level": 3,
+     "text": "Actions"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Write the three goals and the re-delinquency definition into the project README."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Get sign-off from the head of collections on the 30-day window and on \"same customer + same product\"."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Agree the reporting currency (SAR) and calendar (Gregorian, with an optional Hijri column)."
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Check:",
+       "b": 1
+      },
+      {
+       "t": " the business user confirms the definition with a worked example: cured on 12 July, missed again on 27 July = 15 days = re-delinquent."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "step-2",
+   "num": "2",
+   "title": "Kimball dimensional model",
+   "layer": "modeling",
+   "tip": "Say the grain out loud. Everything else in the model follows from it.",
+   "tip_ar": "صرّح بمستوى التفصيل بوضوح؛ فكل ما في النموذج ينبع منه.",
+   "blocks": [
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Purpose:",
+       "b": 1
+      },
+      {
+       "t": " turn the business process into a star schema with one clear grain."
+      }
+     ]
+    },
+    {
+     "type": "h",
+     "level": 3,
+     "text": "Actions"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Pick the business process: installment delinquency and cure."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Declare the grain: "
+         },
+         {
+          "t": "one row per installment delinquency event",
+          "b": 1
+         },
+         {
+          "t": " (one missed installment, from due date to cure date)."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Identify the dimensions (who, where, what): customer, branch, product."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Identify the facts (numbers): days past due, installment amount, outstanding balance."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Map each table one-to-one to the reference model, as below."
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "table",
+     "head": [
+      [
+       {
+        "t": "Banking table"
+       }
+      ],
+      [
+       {
+        "t": "Replaces (reference)"
+       }
+      ],
+      [
+       {
+        "t": "Business key"
+       }
+      ],
+      [
+       {
+        "t": "Columns"
+       }
+      ]
+     ],
+     "rows": [
+      [
+       [
+        {
+         "t": "dim_customer",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "dim_patient"
+        }
+       ],
+       [
+        {
+         "t": "customer_id",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "customer_id, first_name, last_name, gender, dob, city, national_id_or_iqama (masked in silver), customer_segment, nationality_type"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "dim_branch",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "dim_hospital"
+        }
+       ],
+       [
+        {
+         "t": "branch_id",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "branch_id, branch_name, city, region, staff_count"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "dim_product",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "dim_diagnosis"
+        }
+       ],
+       [
+        {
+         "t": "product_code",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "product_code, product_desc, product_type, shariah_structure"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "fact_repayment",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "fact_visit"
+        }
+       ],
+       [
+        {
+         "t": "event_id",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "event_id, customer_id, branch_id, product_code, rm_id, due_date, cure_date, days_past_due, installment_amount_sar, outstanding_balance_sar"
+        }
+       ]
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Column notes:"
+      }
+     ]
+    },
+    {
+     "type": "ul",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "due_date",
+          "c": 1
+         },
+         {
+          "t": " is the missed installment's due date; delinquency starts the day after."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "cure_date",
+          "c": 1
+         },
+         {
+          "t": " is the date the arrears were cleared. It is empty when the event is still open."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "days_past_due",
+          "c": 1
+         },
+         {
+          "t": " is cure_date minus due_date, or days to the 31 Oct 2026 snapshot if still open."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "rm_id",
+          "c": 1
+         },
+         {
+          "t": " (relationship manager) is a degenerate dimension on the fact. It is added so goal 3 can be measured without a fourth dimension."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Region uses Saudi administrative regions: Riyadh, Makkah, Eastern Province, Madinah, Asir, Tabuk."
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Gold KPI table "
+      },
+      {
+       "t": "agg_redelinquency_branch_product",
+       "c": 1
+      },
+      {
+       "t": ", grain branch × product: total_events, total_redelinquencies, redelinquency_rate (percent), total_amount_sar, avg_amount_sar, gold_load_timestamp."
+      }
+     ]
+    },
+    {
+     "type": "h",
+     "level": 3,
+     "text": "Naming convention"
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Every table uses a three-part name "
+      },
+      {
+       "t": "banking.<layer>.<table>",
+       "c": 1
+      },
+      {
+       "t": ", lowercase snake_case, singular entity names."
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "head": [
+      [
+       {
+        "t": "Layer"
+       }
+      ],
+      [
+       {
+        "t": "Pattern"
+       }
+      ],
+      [
+       {
+        "t": "Tables"
+       }
+      ]
+     ],
+     "rows": [
+      [
+       [
+        {
+         "t": "Bronze"
+        }
+       ],
+       [
+        {
+         "t": "<source>_<entity>",
+         "c": 1
+        },
+        {
+         "t": " ("
+        },
+        {
+         "t": "cbs",
+         "c": 1
+        },
+        {
+         "t": " = core banking system)"
+        }
+       ],
+       [
+        {
+         "t": "cbs_customer",
+         "c": 1
+        },
+        {
+         "t": ", "
+        },
+        {
+         "t": "cbs_branch",
+         "c": 1
+        },
+        {
+         "t": ", "
+        },
+        {
+         "t": "cbs_product",
+         "c": 1
+        },
+        {
+         "t": ", "
+        },
+        {
+         "t": "cbs_repayment",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "Silver"
+        }
+       ],
+       [
+        {
+         "t": "dim_<entity>",
+         "c": 1
+        },
+        {
+         "t": ", "
+        },
+        {
+         "t": "fact_<process>",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "dim_customer",
+         "c": 1
+        },
+        {
+         "t": ", "
+        },
+        {
+         "t": "dim_branch",
+         "c": 1
+        },
+        {
+         "t": ", "
+        },
+        {
+         "t": "dim_product",
+         "c": 1
+        },
+        {
+         "t": ", "
+        },
+        {
+         "t": "fact_repayment",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "Gold"
+        }
+       ],
+       [
+        {
+         "t": "fact_<process>_event",
+         "c": 1
+        },
+        {
+         "t": " (event grain), "
+        },
+        {
+         "t": "agg_<measure>_<grain>",
+         "c": 1
+        },
+        {
+         "t": " (aggregates)"
+        }
+       ],
+       [
+        {
+         "t": "fact_redelinquency_event",
+         "c": 1
+        },
+        {
+         "t": ", "
+        },
+        {
+         "t": "agg_redelinquency_branch_product",
+         "c": 1
+        }
+       ]
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Columns follow the same rules, with suffixes for meaning: "
+      },
+      {
+       "t": "_id",
+       "c": 1
+      },
+      {
+       "t": " / "
+      },
+      {
+       "t": "_code",
+       "c": 1
+      },
+      {
+       "t": " keys, "
+      },
+      {
+       "t": "_date",
+       "c": 1
+      },
+      {
+       "t": " dates, "
+      },
+      {
+       "t": "_sar",
+       "c": 1
+      },
+      {
+       "t": " amounts, "
+      },
+      {
+       "t": "_flag",
+       "c": 1
+      },
+      {
+       "t": " 0/1 indicators, "
+      },
+      {
+       "t": "_timestamp",
+       "c": 1
+      },
+      {
+       "t": " load times."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Check:",
+       "b": 1
+      },
+      {
+       "t": " every fact column is either a key to a dimension, a date, or a number you can add up."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "step-3",
+   "num": "3",
+   "title": "Architecture",
+   "layer": "architecture",
+   "tip": "Draw who consumes the result, not only where the data flows.",
+   "tip_ar": "ارسم من سيستخدم النتيجة، لا مسار البيانات فقط.",
+   "blocks": [
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Purpose:",
+       "b": 1
+      },
+      {
+       "t": " fix where data comes from, where each layer lives, and who consumes the result."
+      }
+     ]
+    },
+    {
+     "type": "diagram",
+     "diagram": {
+      "type": "flow",
+      "title": "Nightly core-banking extracts become re-delinquency KPIs",
+      "colW": 230,
+      "cols": 3,
+      "groups": [
+       {
+        "label": "Real source · simulated here by uploading CSVs",
+        "nodes": [
+         "core",
+         "adf",
+         "stg"
+        ],
+        "dashed": true
+       },
+       {
+        "label": "Azure Databricks · Unity Catalog: banking · Lakeflow Job",
+        "nodes": [
+         "br",
+         "sv",
+         "gd"
+        ],
+        "main": true
+       }
+      ],
+      "nodes": [
+       {
+        "id": "core",
+        "col": 0,
+        "row": 0,
+        "label": "Core banking system",
+        "sub": "customers, loans, arrears"
+       },
+       {
+        "id": "adf",
+        "col": 1,
+        "row": 0,
+        "label": "Azure Data Factory",
+        "sub": "nightly extract, CSV per entity"
+       },
+       {
+        "id": "stg",
+        "col": 2,
+        "row": 0,
+        "label": "ADLS Gen2 staging",
+        "sub": "data/staging/[entity]/",
+        "step": "8"
+       },
+       {
+        "id": "br",
+        "col": 0,
+        "row": 1,
+        "label": "Bronze",
+        "sub": "Auto Loader · banking.bronze",
+        "step": "9",
+        "tone": "bronze"
+       },
+       {
+        "id": "sv",
+        "col": 1,
+        "row": 1,
+        "label": "Silver",
+        "sub": "dedupe, PDPL masking, MERGE",
+        "step": "10",
+        "tone": "silver"
+       },
+       {
+        "id": "gd",
+        "col": 2,
+        "row": 1,
+        "label": "Gold",
+        "sub": "30-day flag + KPI table",
+        "step": "11",
+        "tone": "gold",
+        "main": true
+       },
+       {
+        "id": "one",
+        "col": 0,
+        "row": 2,
+        "label": "Databricks One",
+        "sub": "business users open it here",
+        "step": "16"
+       },
+       {
+        "id": "genie",
+        "col": 1,
+        "row": 2,
+        "label": "Genie space",
+        "sub": "plain-English questions",
+        "step": "15"
+       },
+       {
+        "id": "dash",
+        "col": 2,
+        "row": 2,
+        "label": "AI/BI dashboard",
+        "sub": "4 visuals, published",
+        "step": "16"
+       }
+      ],
+      "edges": [
+       {
+        "from": "core",
+        "to": "adf"
+       },
+       {
+        "from": "adf",
+        "to": "stg"
+       },
+       {
+        "from": "stg",
+        "to": "br",
+        "label": "Auto Loader"
+       },
+       {
+        "from": "br",
+        "to": "sv"
+       },
+       {
+        "from": "sv",
+        "to": "gd"
+       },
+       {
+        "from": "sv",
+        "to": "genie"
+       },
+       {
+        "from": "gd",
+        "to": "dash"
+       },
+       {
+        "from": "genie",
+        "to": "one"
+       }
+      ]
+     }
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "In production, the core banking system feeds a nightly Azure Data Factory extract into ADLS staging. This guide replaces those two boxes by uploading CSV files, so everything from staging onwards is real."
+      }
+     ]
+    },
+    {
+     "type": "h",
+     "level": 3,
+     "text": "Actions"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Source: in a real bank, Temenos T24 or Infosys Finacle holds customers, facilities and installment schedules. Azure Data Factory runs a nightly copy (through a self-hosted integration runtime if the core system is on-premises) and writes one CSV per entity to "
+         },
+         {
+          "t": "data/staging/<entity>/",
+          "c": 1
+         },
+         {
+          "t": "."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Simulation: in Step 8 you upload four CSV files to the same folders. Bronze cannot tell the difference."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Layers, all in Unity Catalog catalog "
+         },
+         {
+          "t": "banking",
+          "c": 1
+         },
+         {
+          "t": ":"
+         }
+        ]
+       },
+       {
+        "type": "ul",
+        "items": [
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Bronze: raw copy of each feed, append only."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Silver: de-duplicated, typed, masked dims and one wide fact, kept current with MERGE."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Gold: the 30-day flag per event and the branch × product KPI table."
+            }
+           ]
+          }
+         ]
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Orchestration and delivery: a Lakeflow Job on serverless runs the notebooks (Step 12). An Asset Bundle and GitHub Actions deploy it to dev and prod (Steps 13–14)."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Consumers: a Genie space and an AI/BI dashboard, both opened from Databricks One (Steps 15–16)."
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Check:",
+       "b": 1
+      },
+      {
+       "t": " you can name the table each layer writes, and you know which two boxes this guide simulates."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "step-4",
+   "num": "4",
+   "title": "Azure resources",
+   "layer": "setup",
+   "tip": "Pick one compliant region and put every resource in it.",
+   "tip_ar": "اختر منطقة واحدة متوافقة وضع فيها كل الموارد.",
+   "blocks": [
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Purpose:",
+       "b": 1
+      },
+      {
+       "t": " create the storage and the Databricks workspace that everything else runs on."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Data residency.",
+       "b": 1
+      },
+      {
+       "t": " Banking data is regulated. Pick an Azure region that meets your organization's SAMA and NDMO data requirements. Check the current list of Azure regions and services available for Saudi Arabia in the Azure portal and with your compliance team. Do not assume a region or a service is available there. Use one region for every resource below."
+      }
+     ]
+    },
+    {
+     "type": "h",
+     "level": 3,
+     "text": "Actions"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Sign up for an Azure free account (or use your subscription): portal.azure.com."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Resource group:",
+          "b": 1
+         },
+         {
+          "t": " Portal → Resource groups → Create → name "
+         },
+         {
+          "t": "rg-najd-banking",
+          "c": 1
+         },
+         {
+          "t": " → your region → Review + create."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "ADLS Gen2:",
+          "b": 1
+         },
+         {
+          "t": " Portal → Storage accounts → Create."
+         }
+        ]
+       },
+       {
+        "type": "ol",
+        "items": [
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Basics: resource group "
+            },
+            {
+             "t": "rg-najd-banking",
+             "c": 1
+            },
+            {
+             "t": ", name "
+            },
+            {
+             "t": "<storage-account>",
+             "c": 1
+            },
+            {
+             "t": " (3–24 lowercase letters and digits), same region, Performance Standard, Redundancy LRS."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Advanced tab: tick "
+            },
+            {
+             "t": "Enable hierarchical namespace",
+             "b": 1
+            },
+            {
+             "t": ". This is what makes it ADLS Gen2."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Review + create."
+            }
+           ]
+          }
+         ]
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Databricks workspace:",
+          "b": 1
+         },
+         {
+          "t": " Portal → Create a resource → search \"Azure Databricks\" → Create."
+         }
+        ]
+       },
+       {
+        "type": "ol",
+        "items": [
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Resource group "
+            },
+            {
+             "t": "rg-najd-banking",
+             "c": 1
+            },
+            {
+             "t": ", workspace name "
+            },
+            {
+             "t": "dbw-najd-banking",
+             "c": 1
+            },
+            {
+             "t": ", same region."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Pricing tier: "
+            },
+            {
+             "t": "Premium",
+             "b": 1
+            },
+            {
+             "t": " (Unity Catalog needs it; the 14-day trial tier is also Premium)."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Managed Resource Group name: "
+            },
+            {
+             "t": "rg-najd-banking-managed",
+             "c": 1
+            },
+            {
+             "t": ". Azure puts the workspace's internal resources here. Do not edit it."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Review + create, then "
+            },
+            {
+             "t": "Launch Workspace",
+             "b": 1
+            },
+            {
+             "t": ". Note the URL: that is "
+            },
+            {
+             "t": "<workspace-host>",
+             "c": 1
+            },
+            {
+             "t": " (for example "
+            },
+            {
+             "t": "adb-1234567890123456.7.azuredatabricks.net",
+             "c": 1
+            },
+            {
+             "t": ")."
+            }
+           ]
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "CLI alternative for steps 2–3:"
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "bash",
+     "text": "az login\naz group create --name rg-najd-banking --location <region>\naz storage account create \\\n  --name <storage-account> \\\n  --resource-group rg-najd-banking \\\n  --location <region> \\\n  --sku Standard_LRS \\\n  --kind StorageV2 \\\n  --hns true"
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Check:",
+       "b": 1
+      },
+      {
+       "t": " the resource group shows the storage account and the Databricks workspace; the storage account Overview shows \"Hierarchical namespace: Enabled\"."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "step-5",
+   "num": "5",
+   "title": "Unity Catalog metastore",
+   "layer": "governance",
+   "tip": "Paste the access connector's full Resource ID, not just its name.",
+   "tip_ar": "الصق معرّف المورد الكامل لموصل الوصول، لا اسمه فقط.",
+   "blocks": [
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Purpose:",
+       "b": 1
+      },
+      {
+       "t": " give Databricks a managed identity that can reach the storage, and a metastore that governs every table."
+      }
+     ]
+    },
+    {
+     "type": "h",
+     "level": 3,
+     "text": "Actions"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Access connector:",
+          "b": 1
+         },
+         {
+          "t": " Portal → Create a resource → search \"Access Connector for Azure Databricks\" → Create."
+         }
+        ]
+       },
+       {
+        "type": "ol",
+        "items": [
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Resource group "
+            },
+            {
+             "t": "rg-najd-banking",
+             "c": 1
+            },
+            {
+             "t": ", name "
+            },
+            {
+             "t": "ac-najd-banking",
+             "c": 1
+            },
+            {
+             "t": ", same region."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Managed identity tab: System assigned = On."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Review + create. Open it and copy the "
+            },
+            {
+             "t": "Resource ID",
+             "b": 1
+            },
+            {
+             "t": " from Overview → JSON View. It looks like "
+            },
+            {
+             "t": "/subscriptions/<sub-id>/resourceGroups/rg-najd-banking/providers/Microsoft.Databricks/accessConnectors/ac-najd-banking",
+             "c": 1
+            },
+            {
+             "t": "."
+            }
+           ]
+          }
+         ]
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Role assignment:",
+          "b": 1
+         },
+         {
+          "t": " Storage account "
+         },
+         {
+          "t": "<storage-account>",
+          "c": 1
+         },
+         {
+          "t": " → Access Control (IAM) → Add → Add role assignment."
+         }
+        ]
+       },
+       {
+        "type": "ol",
+        "items": [
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Role: "
+            },
+            {
+             "t": "Storage Blob Data Contributor",
+             "b": 1
+            },
+            {
+             "t": " → Next."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Assign access to: Managed identity → Select members → Managed identity: Access Connector for Azure Databricks → "
+            },
+            {
+             "t": "ac-najd-banking",
+             "c": 1
+            },
+            {
+             "t": " → Select."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Review + assign. Role changes can take 5–10 minutes to apply."
+            }
+           ]
+          }
+         ]
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Containers:",
+          "b": 1
+         },
+         {
+          "t": " Storage account → Data storage → Containers → + Container. Create three, all Private:"
+         }
+        ]
+       },
+       {
+        "type": "ul",
+        "items": [
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "metastore-root",
+             "c": 1
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "data",
+             "c": 1
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "catalog-location",
+             "c": 1
+            }
+           ]
+          }
+         ]
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Metastore:",
+          "b": 1
+         },
+         {
+          "t": " open the account console at "
+         },
+         {
+          "t": "https://accounts.azuredatabricks.net",
+          "c": 1
+         },
+         {
+          "t": " (the first sign-in needs a Microsoft Entra ID Global Administrator)."
+         }
+        ]
+       },
+       {
+        "type": "ol",
+        "items": [
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Catalog → "
+            },
+            {
+             "t": "Create metastore",
+             "b": 1
+            },
+            {
+             "t": "."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Name "
+            },
+            {
+             "t": "najd-metastore",
+             "c": 1
+            },
+            {
+             "t": ", Region = your workspace region."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "ADLS Gen2 path: "
+            },
+            {
+             "t": "metastore-root@<storage-account>.dfs.core.windows.net/",
+             "c": 1
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Access Connector Id: paste the full Resource ID from action 1.3."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Create, then "
+            },
+            {
+             "t": "Assign to workspaces",
+             "b": 1
+            },
+            {
+             "t": " → tick "
+            },
+            {
+             "t": "dbw-najd-banking",
+             "c": 1
+            },
+            {
+             "t": " → Assign → Enable."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "If the account already has a metastore in that region (new accounts often get one automatically), do not create another. Open it and assign the workspace."
+            }
+           ]
+          }
+         ]
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Admin:",
+          "b": 1
+         },
+         {
+          "t": " account console → Catalog → "
+         },
+         {
+          "t": "najd-metastore",
+          "c": 1
+         },
+         {
+          "t": " → Configuration → Metastore Admin → Edit → your user → Save. Also check User management → your user → Roles → Account admin is on."
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Pitfall — \"access connector could not be found\":",
+       "b": 1
+      },
+      {
+       "t": " you pasted the connector name instead of the full Resource ID, the connector is in a subscription of another Entra tenant than the Databricks account, or its system-assigned identity is off. Copy the ID again from JSON View and confirm the tenant in the top-right of the portal."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Check:",
+       "b": 1
+      },
+      {
+       "t": " in the workspace, Catalog Explorer opens without a \"no metastore\" banner, and this SQL returns your metastore:"
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "sql",
+     "text": "SELECT current_metastore();"
+    }
+   ]
+  },
+  {
+   "id": "step-6",
+   "num": "6",
+   "title": "External locations, catalog and schemas",
+   "layer": "governance",
+   "tip": "“Overlaps with managed storage”? Skip that location: the metastore already governs it.",
+   "tip_ar": "ظهرت رسالة تداخل مع التخزين المُدار؟ تجاوز ذلك الموقع، فالـ metastore يحكمه أصلًا.",
+   "blocks": [
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Purpose:",
+       "b": 1
+      },
+      {
+       "t": " tell Unity Catalog which storage paths it may use, then create the "
+      },
+      {
+       "t": "banking",
+       "c": 1
+      },
+      {
+       "t": " catalog and its medallion schemas."
+      }
+     ]
+    },
+    {
+     "type": "h",
+     "level": 3,
+     "text": "Actions"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Storage credential:",
+          "b": 1
+         },
+         {
+          "t": " workspace → Catalog → gear icon → "
+         },
+         {
+          "t": "Credentials",
+          "b": 1
+         },
+         {
+          "t": ". If a credential for "
+         },
+         {
+          "t": "ac-najd-banking",
+          "c": 1
+         },
+         {
+          "t": " is listed, note its name. If the list is empty, create it manually:"
+         }
+        ]
+       },
+       {
+        "type": "ol",
+        "items": [
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Create credential → Credential type: "
+            },
+            {
+             "t": "Azure Managed Identity",
+             "b": 1
+            },
+            {
+             "t": "."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Name "
+            },
+            {
+             "t": "najd_banking_cred",
+             "c": 1
+            },
+            {
+             "t": ", Access connector ID = the full Resource ID from Step 5."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Create."
+            }
+           ]
+          }
+         ]
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "External locations:",
+          "b": 1
+         },
+         {
+          "t": " Catalog → gear icon → "
+         },
+         {
+          "t": "External Locations",
+          "b": 1
+         },
+         {
+          "t": " → Create external location → Manual. Create one per container:"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "table",
+     "head": [
+      [
+       {
+        "t": "Name"
+       }
+      ],
+      [
+       {
+        "t": "URL"
+       }
+      ],
+      [
+       {
+        "t": "Credential"
+       }
+      ]
+     ],
+     "rows": [
+      [
+       [
+        {
+         "t": "ext_metastore_root",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "abfss://metastore-root@<storage-account>.dfs.core.windows.net/",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "najd_banking_cred",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "ext_data",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "abfss://data@<storage-account>.dfs.core.windows.net/",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "najd_banking_cred",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "ext_catalog_location",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "abfss://catalog-location@<storage-account>.dfs.core.windows.net/",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "najd_banking_cred",
+         "c": 1
+        }
+       ]
+      ]
+     ]
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "If a "
+         },
+         {
+          "t": "file events",
+          "b": 1
+         },
+         {
+          "t": " warning appears (\"file events are not enabled\" or similar), click "
+         },
+         {
+          "t": "Force create",
+          "b": 1
+         },
+         {
+          "t": ". File events only speed up Auto Loader notification mode; this project uses directory listing."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Open a notebook or the SQL editor on serverless compute and run the same setup as SQL (skip lines for objects you made in the UI):"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "If "
+      },
+      {
+       "t": "ext_metastore_root",
+       "c": 1
+      },
+      {
+       "t": " fails with \"overlaps with managed storage\", skip it. The metastore already governs that path, and the pipeline only needs "
+      },
+      {
+       "t": "ext_data",
+       "c": 1
+      },
+      {
+       "t": " and "
+      },
+      {
+       "t": "ext_catalog_location",
+       "c": 1
+      },
+      {
+       "t": "."
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "sql",
+     "text": "-- External locations (SQL alternative to the UI)\nCREATE EXTERNAL LOCATION IF NOT EXISTS ext_data\n  URL 'abfss://data@<storage-account>.dfs.core.windows.net/'\n  WITH (STORAGE CREDENTIAL najd_banking_cred);\n\nCREATE EXTERNAL LOCATION IF NOT EXISTS ext_catalog_location\n  URL 'abfss://catalog-location@<storage-account>.dfs.core.windows.net/'\n  WITH (STORAGE CREDENTIAL najd_banking_cred);\n\n-- Catalog with its own managed storage\nCREATE CATALOG IF NOT EXISTS banking\n  MANAGED LOCATION 'abfss://catalog-location@<storage-account>.dfs.core.windows.net/'\n  COMMENT 'Najd National Bank - re-delinquency analytics';\n\nUSE CATALOG banking;\n\nCREATE SCHEMA IF NOT EXISTS bronze COMMENT 'Raw feeds from core banking extracts';\nCREATE SCHEMA IF NOT EXISTS silver COMMENT 'Cleaned, masked, conformed dims and fact';\nCREATE SCHEMA IF NOT EXISTS gold   COMMENT 'Business KPIs';"
+    },
+    {
+     "type": "h",
+     "level": 3,
+     "text": "Create the banking catalog and its three schemas"
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Do this before Step 7. Skip it if you already ran the SQL above."
+      }
+     ]
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Catalog → "
+         },
+         {
+          "t": "+",
+          "b": 1
+         },
+         {
+          "t": " (top of the catalog list) → "
+         },
+         {
+          "t": "Create a catalog",
+          "b": 1
+         },
+         {
+          "t": "."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Catalog name "
+         },
+         {
+          "t": "banking",
+          "c": 1
+         },
+         {
+          "t": ", Type "
+         },
+         {
+          "t": "Standard",
+          "b": 1
+         },
+         {
+          "t": "."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Storage location: pick external location "
+         },
+         {
+          "t": "ext_catalog_location",
+          "c": 1
+         },
+         {
+          "t": " (path "
+         },
+         {
+          "t": "abfss://catalog-location@<storage-account>.dfs.core.windows.net/",
+          "c": 1
+         },
+         {
+          "t": "). This is where the catalog's managed tables live."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Create",
+          "b": 1
+         },
+         {
+          "t": ". On \"Catalog created\", click "
+         },
+         {
+          "t": "View catalog",
+          "b": 1
+         },
+         {
+          "t": " (skip \"Configure catalog\" for now)."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "In "
+         },
+         {
+          "t": "banking",
+          "c": 1
+         },
+         {
+          "t": " → "
+         },
+         {
+          "t": "Create schema",
+          "b": 1
+         },
+         {
+          "t": " → name "
+         },
+         {
+          "t": "bronze",
+          "c": 1
+         },
+         {
+          "t": " → Storage location: leave empty (it inherits the catalog's) → Create."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Repeat action 5 for "
+         },
+         {
+          "t": "silver",
+          "c": 1
+         },
+         {
+          "t": " and "
+         },
+         {
+          "t": "gold",
+          "c": 1
+         },
+         {
+          "t": "."
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "The catalog holds the three schemas: "
+      },
+      {
+       "t": "banking.bronze",
+       "c": 1
+      },
+      {
+       "t": ", "
+      },
+      {
+       "t": "banking.silver",
+       "c": 1
+      },
+      {
+       "t": ", "
+      },
+      {
+       "t": "banking.gold",
+       "c": 1
+      },
+      {
+       "t": ". Every table in Steps 9–11 uses these three-part names."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Check:",
+       "b": 1
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "sql",
+     "text": "SHOW EXTERNAL LOCATIONS;          -- 3 rows\nSHOW SCHEMAS IN banking;          -- bronze, default, gold, information_schema, silver"
+    }
+   ]
+  },
+  {
+   "id": "step-7",
+   "num": "7",
+   "title": "Connectivity test and debugging",
+   "layer": "testing",
+   "tip": "Break it on purpose once. Seeing the permission error now saves hours later.",
+   "tip_ar": "عطّله عمدًا مرة واحدة؛ رؤية خطأ الصلاحيات الآن توفّر ساعات لاحقًا.",
+   "blocks": [
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Purpose:",
+       "b": 1
+      },
+      {
+       "t": " prove Databricks can write and read the "
+      },
+      {
+       "t": "data",
+       "c": 1
+      },
+      {
+       "t": " container, and learn what a missing external location looks like."
+      }
+     ]
+    },
+    {
+     "type": "h",
+     "level": 3,
+     "text": "Actions"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Workspace → New → Notebook → name "
+         },
+         {
+          "t": "00_connectivity_test",
+          "c": 1
+         },
+         {
+          "t": " → Connect → "
+         },
+         {
+          "t": "Serverless",
+          "b": 1
+         },
+         {
+          "t": "."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Write and read a test file:"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "text": "base = \"abfss://data@<storage-account>.dfs.core.windows.net\"\n\ndbutils.fs.put(f\"{base}/test/hello.txt\", \"salam from Najd National Bank\", overwrite=True)\ndisplay(dbutils.fs.ls(f\"{base}/test/\"))\nspark.read.text(f\"{base}/test/hello.txt\").show(truncate=False)"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Deliberate failure.",
+          "b": 1
+         },
+         {
+          "t": " Drop the external location for "
+         },
+         {
+          "t": "data",
+          "c": 1
+         },
+         {
+          "t": ", then read again:"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "sql",
+     "text": "%sql\nDROP EXTERNAL LOCATION IF EXISTS ext_data;"
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "text": "spark.read.text(f\"{base}/test/hello.txt\").show(truncate=False)"
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "You get a permission error. The wording varies by runtime, for example "
+      },
+      {
+       "t": "PERMISSION_DENIED",
+       "c": 1
+      },
+      {
+       "t": " or \"no parent external location was found for path\". The cause is that Unity Catalog finds no external location covering "
+      },
+      {
+       "t": "abfss://data@...",
+       "c": 1
+      },
+      {
+       "t": "."
+      }
+     ]
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Debug it in this order:"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "sql",
+     "text": "%sql\nSHOW EXTERNAL LOCATIONS;                           -- is a location covering the path listed?\nDESCRIBE EXTERNAL LOCATION ext_catalog_location;   -- compare the URL format with the failing path\nSHOW GRANTS ON STORAGE CREDENTIAL najd_banking_cred;"
+    },
+    {
+     "type": "ul",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "No location for the container → create it."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Location exists but the URL is wrong (container name, "
+         },
+         {
+          "t": "dfs",
+          "c": 1
+         },
+         {
+          "t": " vs "
+         },
+         {
+          "t": "blob",
+          "c": 1
+         },
+         {
+          "t": ", missing trailing slash) → fix the URL."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Location exists but you lack rights → "
+         },
+         {
+          "t": "GRANT READ FILES, WRITE FILES ON EXTERNAL LOCATION ext_data TO <your-user>",
+          "c": 1
+         },
+         {
+          "t": "."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Catalog → External Locations → "
+         },
+         {
+          "t": "ext_data",
+          "c": 1
+         },
+         {
+          "t": " → "
+         },
+         {
+          "t": "Test connection",
+          "b": 1
+         },
+         {
+          "t": " shows whether the access connector role is the problem."
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Fix it by recreating the location:"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "sql",
+     "text": "%sql\nCREATE EXTERNAL LOCATION IF NOT EXISTS ext_data\n  URL 'abfss://data@<storage-account>.dfs.core.windows.net/'\n  WITH (STORAGE CREDENTIAL najd_banking_cred);"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Clean up: "
+         },
+         {
+          "t": "dbutils.fs.rm(f\"{base}/test/\", recurse=True)",
+          "c": 1
+         },
+         {
+          "t": "."
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Check:",
+       "b": 1
+      },
+      {
+       "t": " the read in action 2 prints "
+      },
+      {
+       "t": "salam from Najd National Bank",
+       "c": 1
+      },
+      {
+       "t": " again after action 5."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "step-8",
+   "num": "8",
+   "title": "Git folder and staging data",
+   "layer": "data",
+   "tip": "Land files exactly where a real extract would drop them, so nothing downstream changes in production.",
+   "tip_ar": "ضع الملفات حيث يضعها الاستخراج الحقيقي تمامًا، فلا يتغير شيء لاحقًا في الإنتاج.",
+   "blocks": [
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Purpose:",
+       "b": 1
+      },
+      {
+       "t": " put the code under Git and land raw CSV feeds where an upstream extraction service would drop them."
+      }
+     ]
+    },
+    {
+     "type": "h",
+     "level": 3,
+     "text": "Actions"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Create an empty GitHub repo "
+         },
+         {
+          "t": "azure-databricks-najd-bank-redelinquency",
+          "c": 1
+         },
+         {
+          "t": ". Tick \"Add a README file\" so "
+         },
+         {
+          "t": "main",
+          "c": 1
+         },
+         {
+          "t": " exists, then create a "
+         },
+         {
+          "t": "dev",
+          "c": 1
+         },
+         {
+          "t": " branch from "
+         },
+         {
+          "t": "main",
+          "c": 1
+         },
+         {
+          "t": "."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Link GitHub: workspace → your user icon → Settings → Linked accounts → Git integration → GitHub → Link (GitHub App or personal access token)."
+         }
+        ]
+       },
+       {
+        "type": "ol",
+        "items": [
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Create a token in GitHub: your profile picture → Settings → Developer settings → Personal access tokens → "
+            },
+            {
+             "t": "Fine-grained tokens",
+             "b": 1
+            },
+            {
+             "t": " → Generate new token."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Name "
+            },
+            {
+             "t": "databricks-git-folder",
+             "c": 1
+            },
+            {
+             "t": ", Expiration 90 days, Repository access: "
+            },
+            {
+             "t": "Only select repositories",
+             "b": 1
+            },
+            {
+             "t": " → pick "
+            },
+            {
+             "t": "azure-databricks-najd-bank-redelinquency",
+             "c": 1
+            },
+            {
+             "t": "."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Repository permissions: "
+            },
+            {
+             "t": "Contents = Read and write",
+             "b": 1
+            },
+            {
+             "t": " (Metadata = Read-only is added automatically). Add "
+            },
+            {
+             "t": "Workflows = Read and write",
+             "b": 1
+            },
+            {
+             "t": " if you will commit "
+            },
+            {
+             "t": ".github/workflows",
+             "c": 1
+            },
+            {
+             "t": " from Databricks."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Generate token and copy it now; GitHub shows it only once."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "In Databricks: your user icon (top right) → Settings → "
+            },
+            {
+             "t": "Linked accounts",
+             "b": 1
+            },
+            {
+             "t": " → Git integration → Git provider "
+            },
+            {
+             "t": "GitHub",
+             "b": 1
+            },
+            {
+             "t": " → choose "
+            },
+            {
+             "t": "Personal access token",
+             "b": 1
+            },
+            {
+             "t": "."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Git provider username or email = your GitHub username; Token = paste → "
+            },
+            {
+             "t": "Save",
+             "b": 1
+            },
+            {
+             "t": "."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Alternative: choose "
+            },
+            {
+             "t": "Link Git account",
+             "b": 1
+            },
+            {
+             "t": " (GitHub App) → Link → sign in to GitHub → Authorize, then install the Databricks app on this repo only."
+            }
+           ]
+          }
+         ]
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Workspace → Users → your user → Create → "
+         },
+         {
+          "t": "Git folder",
+          "b": 1
+         },
+         {
+          "t": " → paste the repo URL → Create Git folder. From the branch dropdown, create and switch to "
+         },
+         {
+          "t": "feature/initial-pipeline",
+          "c": 1
+         },
+         {
+          "t": ". The folder holds only "
+         },
+         {
+          "t": "README.md",
+          "c": 1
+         },
+         {
+          "t": "."
+         }
+        ]
+       },
+       {
+        "type": "ol",
+        "items": [
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Open the Git folder in the workspace browser. Next to its name at the top you see a button with the current branch, "
+            },
+            {
+             "t": "main",
+             "c": 1
+            },
+            {
+             "t": "."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Click that button. The Git dialog opens."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "In the dialog, open the branch dropdown (top left, shows "
+            },
+            {
+             "t": "main",
+             "c": 1
+            },
+            {
+             "t": ") → "
+            },
+            {
+             "t": "Create branch",
+             "b": 1
+            },
+            {
+             "t": "."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Branch name "
+            },
+            {
+             "t": "feature/initial-pipeline",
+             "c": 1
+            },
+            {
+             "t": ", based on "
+            },
+            {
+             "t": "main",
+             "c": 1
+            },
+            {
+             "t": " → "
+            },
+            {
+             "t": "Create",
+             "b": 1
+            },
+            {
+             "t": "."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "The dialog now shows "
+            },
+            {
+             "t": "feature/initial-pipeline",
+             "c": 1
+            },
+            {
+             "t": " as the current branch. Close it. Every file you create from now on lands on this branch."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Check: the branch button next to the folder name reads "
+            },
+            {
+             "t": "feature/initial-pipeline",
+             "c": 1
+            },
+            {
+             "t": "."
+            }
+           ]
+          }
+         ]
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Build the repo one step at a time. Do not create notebooks or YAML yet. This table shows what each later step adds:"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "table",
+     "head": [
+      [
+       {
+        "t": "Step"
+       }
+      ],
+      [
+       {
+        "t": "Adds to the repo"
+       }
+      ],
+      [
+       {
+        "t": "Commit message"
+       }
+      ]
+     ],
+     "rows": [
+      [
+       [
+        {
+         "t": "8"
+        }
+       ],
+       [
+        {
+         "t": "raw_data/",
+         "c": 1
+        },
+        {
+         "t": " with 6 CSV files"
+        }
+       ],
+       [
+        {
+         "t": "step 08: synthetic raw data",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "9"
+        }
+       ],
+       [
+        {
+         "t": "bronze/",
+         "c": 1
+        },
+        {
+         "t": " with 4 notebooks"
+        }
+       ],
+       [
+        {
+         "t": "step 09: bronze ingestion",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "10"
+        }
+       ],
+       [
+        {
+         "t": "silver/",
+         "c": 1
+        },
+        {
+         "t": " with 3 dim notebooks and 1 fact notebook"
+        }
+       ],
+       [
+        {
+         "t": "step 10: silver dims and fact",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "11"
+        }
+       ],
+       [
+        {
+         "t": "gold/redelinquency_analysis",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "step 11: gold KPIs",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "12"
+        }
+       ],
+       [
+        {
+         "t": "Nothing; the job is built in the UI and its YAML copied"
+        }
+       ],
+       [
+        {
+         "t": "none"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "13"
+        }
+       ],
+       [
+        {
+         "t": "databricks.yml",
+         "c": 1
+        },
+        {
+         "t": ", "
+        },
+        {
+         "t": "resources/job.yml",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "step 13: asset bundle",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "14"
+        }
+       ],
+       [
+        {
+         "t": ".github/workflows/deploy-dev.yml",
+         "c": 1
+        },
+        {
+         "t": ", "
+        },
+        {
+         "t": "deploy-prod.yml",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "step 14: CI/CD workflows",
+         "c": 1
+        }
+       ]
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "After this step the repo looks like this:"
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "text",
+     "text": "azure-databricks-najd-bank-redelinquency/\n├── README.md\n└── raw_data/\n    ├── branch_raw.csv\n    ├── branch_raw_2.csv\n    ├── customer_raw.csv\n    ├── product_raw.csv\n    ├── product_raw_2.csv\n    └── repayment_raw.csv"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Create the CSV files below in "
+         },
+         {
+          "t": "raw_data/",
+          "c": 1
+         },
+         {
+          "t": " (Create → File, paste, save). All data is synthetic. National IDs start with 1 (Saudi) and Iqama numbers with 2 (expat); they are fake."
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "raw_data/customer_raw.csv",
+       "c": 1
+      },
+      {
+       "t": " (20 rows)"
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "csv",
+     "text": "customer_id,first_name,last_name,gender,dob,city,national_id_or_iqama,customer_segment,nationality_type\nCUST001,Abdullah,Al-Otaibi,M,1986-03-14,Riyadh,1084523671,Retail,Saudi\nCUST002,Noura,Al-Ghamdi,F,1991-11-02,Jeddah,1097634528,Affluent,Saudi\nCUST003,Faisal,Al-Dosari,M,1979-07-21,Dammam,1063398214,Retail,Saudi\nCUST004,Reem,Al-Harbi,F,1988-05-09,Makkah,1075521986,Retail,Saudi\nCUST005,Khalid,Al-Qahtani,M,1983-01-30,Riyadh,1058816243,Affluent,Saudi\nCUST006,Sara,Al-Juhani,F,1990-09-17,Madinah,1089932475,Retail,Saudi\nCUST007,Mohammed,Al-Shehri,M,1993-12-05,Abha,1102245869,Retail,Saudi\nCUST008,Hessa,Al-Anazi,F,1961-04-26,Tabuk,1029987354,Retail,Saudi\nCUST009,Ahmed,Abdelrahman,M,1985-08-11,Khobar,2234517890,Retail,Expat\nCUST010,Lama,Al-Zahrani,F,1987-02-19,Jeddah,1081147392,Private,Saudi\nCUST011,Turki,Al-Mutairi,M,1980-10-03,Riyadh,1067723158,Private,Saudi\nCUST012,Omar,Al-Shammari,M,1976-06-28,Dammam,1052289641,Affluent,Saudi\nCUST013,Rana,Haddad,F,1992-03-08,Makkah,2318874502,Retail,Expat\nCUST014,Saud,Al-Subaie,M,1989-07-15,Riyadh,1093364827,Retail,Saudi\nCUST015,Mona,Al-Malki,F,1995-01-22,Jeddah,1114458736,Retail,Saudi\nCUST016,Tariq,Mansour,M,1984-11-30,Riyadh,2276631985,Retail,Expat\nCUST017,Abeer,Al-Asmari,F,1982-09-12,Khobar,1071198354,Affluent,Saudi\nCUST018,Yousef,Al-Rashidi,M,1997-04-04,Madinah,1123385469,Retail,Saudi\nCUST019,Layla,Nasser,F,1990-12-18,Riyadh,2295548213,Affluent,Expat\nCUST020,Bandar,Al-Sahli,M,1978-08-07,Tabuk,1046672918,Retail,Saudi"
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "raw_data/branch_raw.csv",
+       "c": 1
+      },
+      {
+       "t": " (15 rows)"
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "csv",
+     "text": "branch_id,branch_name,city,region,staff_count\nBR001,Riyadh Olaya,Riyadh,Riyadh,42\nBR002,Riyadh Al Malaz,Riyadh,Riyadh,28\nBR003,Riyadh King Fahd Road,Riyadh,Riyadh,35\nBR004,Jeddah Tahlia,Jeddah,Makkah,38\nBR005,Jeddah Al Hamra,Jeddah,Makkah,26\nBR006,Jeddah Al Safa,Jeddah,Makkah,22\nBR007,Makkah Al Aziziyah,Makkah,Makkah,24\nBR008,Makkah Al Awali,Makkah,Makkah,18\nBR009,Madinah Quba,Madinah,Madinah,21\nBR010,Madinah Central,Madinah,Madinah,25\nBR011,Dammam Al Faisaliyah,Dammam,Eastern Province,30\nBR012,Dammam Al Shatea,Dammam,Eastern Province,19\nBR013,Khobar Corniche,Khobar,Eastern Province,27\nBR014,Abha Al Manhal,Abha,Asir,16\nBR015,Tabuk Al Muruj,Tabuk,Tabuk,14"
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "raw_data/branch_raw_2.csv",
+       "c": 1
+      },
+      {
+       "t": " (second delivery: one new branch)"
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "csv",
+     "text": "branch_id,branch_name,city,region,staff_count\nBR016,Riyadh Al Narjis,Riyadh,Riyadh,20"
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "raw_data/product_raw.csv",
+       "c": 1
+      },
+      {
+       "t": " (15 rows)"
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "csv",
+     "text": "product_code,product_desc,product_type,shariah_structure\nPF01,Personal Finance - Government Salaried,Personal Finance,Tawarruq\nPF02,Personal Finance - Private Sector Salaried,Personal Finance,Tawarruq\nPF03,Personal Finance - Retirees,Personal Finance,Tawarruq\nPF04,Personal Finance - Debt Buyout,Personal Finance,Tawarruq\nAF01,Auto Finance - New Vehicle,Auto Finance,Murabaha\nAF02,Auto Finance - Used Vehicle,Auto Finance,Murabaha\nAF03,Auto Lease - New Vehicle,Auto Finance,Ijara\nAF04,Auto Lease - Balloon Payment,Auto Finance,Ijara\nCC01,Classic Credit Card,Credit Card,Tawarruq\nCC02,Gold Credit Card,Credit Card,Tawarruq\nCC03,Platinum Credit Card,Credit Card,Tawarruq\nCC04,Signature Credit Card,Credit Card,Tawarruq\nHF01,Home Finance - Ready Unit,Home Finance,Murabaha\nHF02,Home Finance - Off-Plan,Home Finance,Ijara\nHF03,Home Finance - Self Construction,Home Finance,Ijara"
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "raw_data/product_raw_2.csv",
+       "c": 1
+      },
+      {
+       "t": " (second delivery: HF02 description changes)"
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "csv",
+     "text": "product_code,product_desc,product_type,shariah_structure\nHF02,Home Finance - Off-Plan (Wafi Programme),Home Finance,Ijara"
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "raw_data/repayment_raw.csv",
+       "c": 1
+      },
+      {
+       "t": " (30 rows; 8 events are 30-day re-delinquencies: EVT0002, 0005, 0006, 0008, 0010, 0015, 0021, 0025; EVT0018 is still open)"
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "csv",
+     "text": "event_id,customer_id,branch_id,product_code,rm_id,due_date,cure_date,days_past_due,installment_amount_sar,outstanding_balance_sar\nEVT0001,CUST001,BR001,PF02,RM101,2026-06-27,2026-07-12,15,3150.00,142800.00\nEVT0002,CUST001,BR001,PF02,RM101,2026-07-27,2026-08-10,14,3150.00,139950.00\nEVT0003,CUST001,BR001,PF02,RM101,2026-09-27,2026-10-05,8,3150.00,133650.00\nEVT0004,CUST002,BR004,CC02,RM201,2026-06-15,2026-06-30,15,1250.00,24500.00\nEVT0005,CUST002,BR004,CC02,RM201,2026-07-15,2026-08-04,20,1250.00,25100.00\nEVT0006,CUST002,BR004,CC02,RM201,2026-08-15,2026-09-02,18,1250.00,25600.00\nEVT0007,CUST003,BR011,AF02,RM301,2026-07-01,2026-07-20,19,2380.00,71400.00\nEVT0008,CUST003,BR011,AF02,RM301,2026-08-01,2026-08-25,24,2380.00,69020.00\nEVT0009,CUST005,BR002,CC03,RM102,2026-06-20,2026-07-08,18,1875.00,37200.00\nEVT0010,CUST005,BR002,CC03,RM102,2026-07-20,2026-08-01,12,1875.00,36800.00\nEVT0011,CUST004,BR007,PF01,RM202,2026-06-05,2026-06-20,15,2650.00,118400.00\nEVT0012,CUST004,BR007,PF01,RM202,2026-09-05,2026-09-18,13,2650.00,110450.00\nEVT0013,CUST006,BR009,HF01,RM401,2026-07-10,2026-07-25,15,6420.00,812000.00\nEVT0014,CUST007,BR014,AF01,RM501,2026-08-03,2026-08-17,14,2960.00,104300.00\nEVT0015,CUST007,BR014,AF01,RM501,2026-09-03,2026-09-30,27,2960.00,101340.00\nEVT0016,CUST008,BR015,PF03,RM601,2026-07-25,2026-08-06,12,1980.00,58600.00\nEVT0017,CUST009,BR013,CC01,RM302,2026-06-12,2026-06-25,13,640.00,11800.00\nEVT0018,CUST009,BR013,CC01,RM302,2026-10-12,,19,640.00,12350.00\nEVT0019,CUST010,BR005,HF02,RM203,2026-08-20,2026-09-04,15,7150.00,965000.00\nEVT0020,CUST011,BR003,CC04,RM103,2026-07-05,2026-07-19,14,2400.00,48900.00\nEVT0021,CUST011,BR003,CC04,RM103,2026-08-05,2026-08-14,9,2400.00,49250.00\nEVT0022,CUST012,BR012,PF04,RM303,2026-09-10,2026-09-22,12,3480.00,186500.00\nEVT0023,CUST013,BR008,AF03,RM204,2026-06-28,2026-07-14,16,2710.00,88200.00\nEVT0024,CUST014,BR001,PF02,RM101,2026-08-27,2026-09-08,12,2890.00,131500.00\nEVT0025,CUST014,BR001,PF02,RM101,2026-09-27,2026-10-15,18,2890.00,128610.00\nEVT0026,CUST015,BR006,CC02,RM205,2026-10-01,2026-10-14,13,1180.00,22700.00\nEVT0027,CUST016,BR002,AF02,RM102,2026-07-18,2026-08-02,15,2240.00,64800.00\nEVT0028,CUST016,BR002,AF02,RM102,2026-09-18,2026-10-03,15,2240.00,60320.00\nEVT0029,CUST017,BR013,HF03,RM302,2026-08-08,2026-08-21,13,5880.00,702000.00\nEVT0030,CUST018,BR010,CC01,RM402,2026-09-14,2026-09-28,14,590.00,10400.00"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "In the Git folder, Create → Folder → raw_data first. Then commit: click the branch name at the top of the Git folder → tick the 6 CSV files → message \"step 08: synthetic raw data\" → Commit & Push."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Land the "
+         },
+         {
+          "t": "first",
+          "b": 1
+         },
+         {
+          "t": " delivery in staging. This simulates the nightly ADF extract. Portal → "
+         },
+         {
+          "t": "<storage-account>",
+          "c": 1
+         },
+         {
+          "t": " → Containers → "
+         },
+         {
+          "t": "data",
+          "c": 1
+         },
+         {
+          "t": " → Upload → Advanced → \"Upload to folder\":"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "table",
+     "head": [
+      [
+       {
+        "t": "File"
+       }
+      ],
+      [
+       {
+        "t": "Upload to folder"
+       }
+      ]
+     ],
+     "rows": [
+      [
+       [
+        {
+         "t": "customer_raw.csv",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "staging/customers",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "branch_raw.csv",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "staging/branches",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "product_raw.csv",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "staging/products",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "repayment_raw.csv",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "staging/repayments",
+         "c": 1
+        }
+       ]
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Keep "
+      },
+      {
+       "t": "branch_raw_2.csv",
+       "c": 1
+      },
+      {
+       "t": " and "
+      },
+      {
+       "t": "product_raw_2.csv",
+       "c": 1
+      },
+      {
+       "t": " for Step 10. Or copy from a notebook (set "
+      },
+      {
+       "t": "repo",
+       "c": 1
+      },
+      {
+       "t": " to your Git folder path):"
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "text": "repo = \"/Workspace/Users/<your-email>/azure-databricks-najd-bank-redelinquency\"\nbase = \"abfss://data@<storage-account>.dfs.core.windows.net\"\n\nfor src, entity in [(\"customer_raw.csv\", \"customers\"), (\"branch_raw.csv\", \"branches\"),\n                    (\"product_raw.csv\", \"products\"), (\"repayment_raw.csv\", \"repayments\")]:\n    dbutils.fs.cp(f\"file:{repo}/raw_data/{src}\", f\"{base}/staging/{entity}/{src}\")"
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Check:",
+       "b": 1
+      },
+      {
+       "t": " "
+      },
+      {
+       "t": "display(dbutils.fs.ls(\"abfss://data@<storage-account>.dfs.core.windows.net/staging/\"))",
+       "c": 1
+      },
+      {
+       "t": " lists four folders, each holding one CSV."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "step-9",
+   "num": "9",
+   "title": "Bronze: Auto Loader ingestion",
+   "layer": "bronze",
+   "tip": "Auto Loader remembers what it has read: rerunning never reloads old files.",
+   "tip_ar": "يتذكر Auto Loader ما قرأه، فإعادة التشغيل لا تعيد تحميل الملفات القديمة.",
+   "blocks": [
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Purpose:",
+       "b": 1
+      },
+      {
+       "t": " load each staging feed, incrementally and as-is, into a bronze Delta table."
+      }
+     ]
+    },
+    {
+     "type": "h",
+     "level": 3,
+     "text": "Actions"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "In the Git folder, Create → Folder → "
+         },
+         {
+          "t": "bronze",
+          "c": 1
+         },
+         {
+          "t": "."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "In "
+         },
+         {
+          "t": "bronze/",
+          "c": 1
+         },
+         {
+          "t": ", Create → Notebook → "
+         },
+         {
+          "t": "customers_raw_data_ingestion",
+          "c": 1
+         },
+         {
+          "t": ", attach it to "
+         },
+         {
+          "t": "Serverless",
+          "b": 1
+         },
+         {
+          "t": ", type in this code and run it. Get one feed working before you add the others:"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "text": "# Bronze: customers feed -> banking.bronze.cbs_customer\nfrom pyspark.sql.functions import col, current_timestamp\n\nentity       = \"customers\"          # staging folder name\ntable        = \"cbs_customer\"   # <source>_<entity>\nschema_hints = \"customer_id STRING, national_id_or_iqama STRING\"\n\nbase        = \"abfss://data@<storage-account>.dfs.core.windows.net\"\nsource_path = f\"{base}/staging/{entity}/\"\nschema_path = f\"{base}/schemas/bronze/{table}/\"\ncheckpoint  = f\"{base}/checkpoints/bronze/{table}/\"\ntarget      = f\"banking.bronze.{table}\"\n\ndf = (\n    spark.readStream.format(\"cloudFiles\")\n    .option(\"cloudFiles.format\", \"csv\")\n    .option(\"header\", \"true\")\n    .option(\"cloudFiles.inferColumnTypes\", \"true\")\n    .option(\"cloudFiles.schemaHints\", schema_hints)\n    .option(\"cloudFiles.maxFilesPerTrigger\", 1)\n    .option(\"cloudFiles.schemaLocation\", schema_path)\n    .load(source_path)\n    .drop(\"_rescued_data\")\n    .withColumn(\"source_file\", col(\"_metadata.file_path\"))\n    .withColumn(\"bronze_ingested_at\", current_timestamp())\n)\n\n(\n    df.writeStream.format(\"delta\")\n    .option(\"checkpointLocation\", checkpoint)\n    .outputMode(\"append\")\n    .trigger(availableNow=True)\n    .toTable(target)\n    .awaitTermination()\n)\n\ndisplay(spark.table(target))"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Copy the same code into the other three notebooks. Change only the three config lines:"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "table",
+     "head": [
+      [
+       {
+        "t": "Notebook"
+       }
+      ],
+      [
+       {
+        "t": "entity",
+        "c": 1
+       },
+       {
+        "t": " (staging folder)"
+       }
+      ],
+      [
+       {
+        "t": "table",
+        "c": 1
+       }
+      ],
+      [
+       {
+        "t": "schema_hints",
+        "c": 1
+       }
+      ]
+     ],
+     "rows": [
+      [
+       [
+        {
+         "t": "customers_raw_data_ingestion",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "customers",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "cbs_customer",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "customer_id STRING, national_id_or_iqama STRING",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "branches_raw_data_ingestion",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "branches",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "cbs_branch",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "branch_id STRING, staff_count INT",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "products_raw_data_ingestion",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "products",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "cbs_product",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "product_code STRING",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "repayments_raw_data_ingestion",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "repayments",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "cbs_repayment",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "event_id STRING, due_date DATE, cure_date DATE, installment_amount_sar DECIMAL(18,2), outstanding_balance_sar DECIMAL(18,2)",
+         "c": 1
+        }
+       ]
+      ]
+     ]
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Run all four notebooks."
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Why each option matters:"
+      }
+     ]
+    },
+    {
+     "type": "ul",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "maxFilesPerTrigger = 1",
+          "c": 1
+         },
+         {
+          "t": " processes one file per micro-batch, so each delivery stays a separate batch."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "schemaLocation",
+          "c": 1
+         },
+         {
+          "t": " stores the inferred schema, so later files are read with the same types."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "schemaHints",
+          "c": 1
+         },
+         {
+          "t": " stop IDs being read as numbers. A national ID read as "
+         },
+         {
+          "t": "BIGINT",
+          "c": 1
+         },
+         {
+          "t": " would lose its type and break masking."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "_rescued_data",
+          "c": 1
+         },
+         {
+          "t": " is dropped to keep bronze identical in shape to the source; turn it back on if you want to catch malformed rows."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "trigger(availableNow=True)",
+          "c": 1
+         },
+         {
+          "t": " processes everything new, then stops. Serverless supports this trigger."
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Commit:",
+       "b": 1
+      },
+      {
+       "t": " Git folder → branch name → tick the 4 bronze notebooks → message "
+      },
+      {
+       "t": "step 09: bronze ingestion",
+       "c": 1
+      },
+      {
+       "t": " → Commit & Push."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Check:",
+       "b": 1
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "sql",
+     "text": "SELECT 'cbs_customer' AS t, COUNT(*) FROM banking.bronze.cbs_customer  UNION ALL\nSELECT 'cbs_branch',        COUNT(*) FROM banking.bronze.cbs_branch    UNION ALL\nSELECT 'cbs_product',       COUNT(*) FROM banking.bronze.cbs_product   UNION ALL\nSELECT 'cbs_repayment',     COUNT(*) FROM banking.bronze.cbs_repayment;\n-- expected: 20, 15, 15, 30. A second run adds 0 rows."
+    }
+   ]
+  },
+  {
+   "id": "step-10",
+   "num": "10",
+   "title": "Silver: dimensions and fact",
+   "layer": "silver",
+   "tip": "Mask in silver: analysts need patterns, not names or ID numbers.",
+   "tip_ar": "أخفِ البيانات في Silver؛ المحللون يحتاجون الأنماط لا الأسماء ولا أرقام الهوية.",
+   "blocks": [
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Purpose:",
+       "b": 1
+      },
+      {
+       "t": " clean, de-duplicate and mask the bronze data, then MERGE it into conformed Delta dimensions and one wide fact table."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Why mask here.",
+       "b": 1
+      },
+      {
+       "t": " Saudi Arabia's Personal Data Protection Law (PDPL) requires data minimisation and protection of personal data, and SAMA expects banks to restrict access to customer data. Analysts do not need names or ID numbers to measure re-delinquency. Silver therefore stores only the last 4 digits of the National ID / Iqama and the initials of each name. In production, also consider Unity Catalog column masks and a salted hash kept in a secret scope."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Dates.",
+       "b": 1
+      },
+      {
+       "t": " Store Gregorian "
+      },
+      {
+       "t": "DATE",
+       "c": 1
+      },
+      {
+       "t": " columns. SAMA reporting and the core system may use Hijri dates; add an optional Hijri column for display (action 5), never as the join or window key."
+      }
+     ]
+    },
+    {
+     "type": "h",
+     "level": 3,
+     "text": "Actions"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "In the Git folder, Create → Folder → "
+         },
+         {
+          "t": "silver",
+          "c": 1
+         },
+         {
+          "t": ". In it, create the notebook "
+         },
+         {
+          "t": "dim_customer_ingestion",
+          "c": 1
+         },
+         {
+          "t": " on Serverless and type in:"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "text": "# Silver: banking.bronze.cbs_customer -> banking.silver.dim_customer (masked, MERGE)\nfrom pyspark.sql.functions import col, concat, lit, substring, upper, trim, to_date, current_timestamp\nfrom delta.tables import DeltaTable\n\nbase       = \"abfss://data@<storage-account>.dfs.core.windows.net\"\nsource     = \"banking.bronze.cbs_customer\"\ntarget     = \"banking.silver.dim_customer\"\ncheckpoint = f\"{base}/checkpoints/silver/dim_customer/\"\nkey        = \"customer_id\"\n\ndef transform(df):\n    return (\n        df.dropDuplicates([key])\n        .withColumn(\"dob\", to_date(\"dob\"))\n        .withColumn(\"gender\", upper(trim(col(\"gender\"))))\n        # PII masking (PDPL / SAMA): keep last 4 digits and initials only\n        .withColumn(\"national_id_or_iqama\",\n                    concat(lit(\"******\"), substring(col(\"national_id_or_iqama\").cast(\"string\"), -4, 4)))\n        .withColumn(\"first_name\", concat(substring(\"first_name\", 1, 1), lit(\"***\")))\n        .withColumn(\"last_name\",  concat(substring(\"last_name\", 1, 1), lit(\"***\")))\n        .withColumn(\"load_timestamp\", current_timestamp())\n        .drop(\"source_file\", \"bronze_ingested_at\")\n    )\n\n# Create the empty target once, with the right schema. mode(\"ignore\") does nothing if it already exists,\n# so a later run can never overwrite the dimension.\ntransform(spark.read.table(source).limit(0)).write.format(\"delta\").mode(\"ignore\").saveAsTable(target)\n\ndef upsert(batch_df, batch_id):\n    s = batch_df.sparkSession            # use the batch's session (required on serverless)\n    (DeltaTable.forName(s, target).alias(\"t\")\n        .merge(transform(batch_df).alias(\"s\"), f\"t.{key} = s.{key}\")\n        .whenMatchedUpdateAll()\n        .whenNotMatchedInsertAll()\n        .execute())\n\n(\n    spark.readStream.table(source)\n    .writeStream\n    .foreachBatch(upsert)\n    .option(\"checkpointLocation\", checkpoint)\n    .trigger(availableNow=True)\n    .start()\n    .awaitTermination()\n)\n\ndisplay(spark.table(target))"
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "The "
+      },
+      {
+       "t": "dropDuplicates",
+       "c": 1
+      },
+      {
+       "t": " runs inside each micro-batch on purpose. A streaming "
+      },
+      {
+       "t": "dropDuplicates",
+       "c": 1
+      },
+      {
+       "t": " before "
+      },
+      {
+       "t": "foreachBatch",
+       "c": 1
+      },
+      {
+       "t": " keeps every key it has ever seen in state, so a later file that changes a row (like "
+      },
+      {
+       "t": "product_raw_2.csv",
+       "c": 1
+      },
+      {
+       "t": ") would be silently dropped instead of merged."
+      }
+     ]
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Create "
+         },
+         {
+          "t": "dim_branch_ingestion.ipynb",
+          "c": 1
+         },
+         {
+          "t": ". Use the same code as action 1 and replace only the config lines and "
+         },
+         {
+          "t": "transform",
+          "c": 1
+         },
+         {
+          "t": ":"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "text": "from pyspark.sql.functions import col, trim, initcap, current_timestamp\n\nsource     = \"banking.bronze.cbs_branch\"\ntarget     = \"banking.silver.dim_branch\"\ncheckpoint = f\"{base}/checkpoints/silver/dim_branch/\"\nkey        = \"branch_id\"\n\ndef transform(df):\n    return (\n        df.dropDuplicates([key])\n        .withColumn(\"branch_name\", trim(col(\"branch_name\")))\n        .withColumn(\"city\", initcap(trim(col(\"city\"))))\n        .withColumn(\"staff_count\", col(\"staff_count\").cast(\"int\"))\n        .withColumn(\"load_timestamp\", current_timestamp())\n        .drop(\"source_file\", \"bronze_ingested_at\")\n    )"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Create "
+         },
+         {
+          "t": "dim_product_ingestion.ipynb",
+          "c": 1
+         },
+         {
+          "t": " the same way:"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "text": "from pyspark.sql.functions import col, trim, upper, current_timestamp\n\nsource     = \"banking.bronze.cbs_product\"\ntarget     = \"banking.silver.dim_product\"\ncheckpoint = f\"{base}/checkpoints/silver/dim_product/\"\nkey        = \"product_code\"\n\ndef transform(df):\n    return (\n        df.dropDuplicates([key])\n        .withColumn(\"product_code\", upper(trim(col(\"product_code\"))))\n        .withColumn(\"product_desc\", trim(col(\"product_desc\")))\n        .withColumn(\"load_timestamp\", current_timestamp())\n        .drop(\"source_file\", \"bronze_ingested_at\")\n    )"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Run the three dim notebooks, then create and run "
+         },
+         {
+          "t": "fact_repayment_ingestion.ipynb",
+          "c": 1
+         },
+         {
+          "t": ". It joins all three dims into one wide table and merges on "
+         },
+         {
+          "t": "event_id",
+          "c": 1
+         },
+         {
+          "t": ":"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "text": "# Silver: banking.bronze.cbs_repayment + dims -> banking.silver.fact_repayment (MERGE on event_id)\nfrom pyspark.sql.functions import col, to_date, date_format, current_timestamp\nfrom delta.tables import DeltaTable\n\nbase       = \"abfss://data@<storage-account>.dfs.core.windows.net\"\nsource     = \"banking.bronze.cbs_repayment\"\ntarget     = \"banking.silver.fact_repayment\"\ncheckpoint = f\"{base}/checkpoints/silver/fact_repayment/\"\nkey        = \"event_id\"\n\ndef transform(df, s):\n    # Current dimensions (batch read: we need the full dim, not only new rows)\n    customers = s.read.table(\"banking.silver.dim_customer\").select(\n        \"customer_id\", \"gender\", col(\"city\").alias(\"customer_city\"),\n        \"customer_segment\", \"nationality_type\")\n    branches = s.read.table(\"banking.silver.dim_branch\").select(\n        \"branch_id\", \"branch_name\", col(\"city\").alias(\"branch_city\"), \"region\")\n    products = s.read.table(\"banking.silver.dim_product\").select(\n        \"product_code\", \"product_desc\", \"product_type\", \"shariah_structure\")\n\n    return (\n        df.dropDuplicates([key])\n        .withColumn(\"due_date\", to_date(\"due_date\"))\n        .withColumn(\"cure_date\", to_date(\"cure_date\"))\n        .withColumn(\"days_past_due\", col(\"days_past_due\").cast(\"int\"))\n        .withColumn(\"installment_amount_sar\", col(\"installment_amount_sar\").cast(\"decimal(18,2)\"))\n        .withColumn(\"outstanding_balance_sar\", col(\"outstanding_balance_sar\").cast(\"decimal(18,2)\"))\n        .withColumn(\"due_month\", date_format(\"due_date\", \"yyyy-MM\"))\n        .join(customers, \"customer_id\", \"left\")\n        .join(branches,  \"branch_id\",   \"left\")\n        .join(products,  \"product_code\", \"left\")\n        .withColumn(\"load_timestamp\", current_timestamp())\n        .drop(\"source_file\", \"bronze_ingested_at\")\n    )\n\n# Create the empty target once (no-op if it exists), so a later run can never overwrite the fact\ntransform(spark.read.table(source).limit(0), spark).write.format(\"delta\").mode(\"ignore\").saveAsTable(target)\n\ndef upsert(batch_df, batch_id):\n    s = batch_df.sparkSession            # use the batch's session (required on serverless)\n    (DeltaTable.forName(s, target).alias(\"t\")\n        .merge(transform(batch_df, s).alias(\"s\"), f\"t.{key} = s.{key}\")\n        .whenMatchedUpdateAll()\n        .whenNotMatchedInsertAll()\n        .execute())\n\n(\n    spark.readStream.table(source)\n    .writeStream\n    .foreachBatch(upsert)\n    .option(\"checkpointLocation\", checkpoint)\n    .trigger(availableNow=True)\n    .start()\n    .awaitTermination()\n)\n\ndisplay(spark.table(target).orderBy(\"event_id\"))"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Optional Hijri column. Decide before the first fact run, because the first run fixes the table schema. Add a first cell "
+         },
+         {
+          "t": "%pip install hijridate",
+          "c": 1
+         },
+         {
+          "t": ", then add this above "
+         },
+         {
+          "t": "upsert",
+          "c": 1
+         },
+         {
+          "t": " and "
+         },
+         {
+          "t": ".withColumn(\"due_date_hijri\", to_hijri(\"due_date\"))",
+          "c": 1
+         },
+         {
+          "t": " after the "
+         },
+         {
+          "t": "due_month",
+          "c": 1
+         },
+         {
+          "t": " line:"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "text": "import pandas as pd\nfrom pyspark.sql.functions import pandas_udf\nfrom hijridate import Gregorian\n\n@pandas_udf(\"string\")\ndef to_hijri(d: pd.Series) -> pd.Series:\n    return d.apply(lambda x: None if pd.isna(x)\n                   else Gregorian(x.year, x.month, x.day).to_hijri().isoformat())"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Demonstrate the MERGE.",
+          "b": 1
+         },
+         {
+          "t": " Upload "
+         },
+         {
+          "t": "branch_raw_2.csv",
+          "c": 1
+         },
+         {
+          "t": " to "
+         },
+         {
+          "t": "data/staging/branches/",
+          "c": 1
+         },
+         {
+          "t": " and "
+         },
+         {
+          "t": "product_raw_2.csv",
+          "c": 1
+         },
+         {
+          "t": " to "
+         },
+         {
+          "t": "data/staging/products/",
+          "c": 1
+         },
+         {
+          "t": ". Rerun "
+         },
+         {
+          "t": "branches_raw_data_ingestion",
+          "c": 1
+         },
+         {
+          "t": ", "
+         },
+         {
+          "t": "products_raw_data_ingestion",
+          "c": 1
+         },
+         {
+          "t": ", "
+         },
+         {
+          "t": "dim_branch_ingestion",
+          "c": 1
+         },
+         {
+          "t": " and "
+         },
+         {
+          "t": "dim_product_ingestion",
+          "c": 1
+         },
+         {
+          "t": "."
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Pitfall — ",
+       "b": 1
+      },
+      {
+       "t": "spark.read",
+       "b": 1,
+       "c": 1
+      },
+      {
+       "t": " vs ",
+       "b": 1
+      },
+      {
+       "t": "spark.readStream",
+       "b": 1,
+       "c": 1
+      },
+      {
+       "t": " in silver:",
+       "b": 1
+      },
+      {
+       "t": " silver reads bronze with "
+      },
+      {
+       "t": "spark.readStream.table",
+       "c": 1
+      },
+      {
+       "t": ". With "
+      },
+      {
+       "t": "spark.read",
+       "c": 1
+      },
+      {
+       "t": ", every run reprocesses all of bronze, there is no checkpoint, and "
+      },
+      {
+       "t": "foreachBatch",
+       "c": 1
+      },
+      {
+       "t": " is not available. In the fact notebook, the dimension lookups inside "
+      },
+      {
+       "t": "transform",
+       "c": 1
+      },
+      {
+       "t": " use "
+      },
+      {
+       "t": "s.read.table",
+       "c": 1
+      },
+      {
+       "t": " on purpose: they need the full current dimension, not only new rows. They are the customers, branches and products lines at the top of transform; s.read is spark.read through the batch's session."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Note: the fact stores the product description at load time. EVT0019 keeps \"Home Finance - Off-Plan\" until it is reprocessed. Join "
+      },
+      {
+       "t": "dim_product",
+       "c": 1
+      },
+      {
+       "t": " at query time if you always need the latest description."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Commit:",
+       "b": 1
+      },
+      {
+       "t": " Git folder → branch name → tick the 4 silver notebooks → message "
+      },
+      {
+       "t": "step 10: silver dims and fact",
+       "c": 1
+      },
+      {
+       "t": " → Commit & Push."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Check:",
+       "b": 1
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "sql",
+     "text": "SELECT COUNT(*) FROM banking.silver.dim_customer;    -- 20\nSELECT COUNT(*) FROM banking.silver.dim_branch;      -- 15, then 16 after action 6 (BR016 added)\nSELECT COUNT(*) FROM banking.silver.dim_product;     -- 15 (still 15 after action 6)\nSELECT COUNT(*) FROM banking.silver.fact_repayment;  -- 30\n\nSELECT product_code, product_desc, load_timestamp\nFROM banking.silver.dim_product WHERE product_code = 'HF02';\n-- after action 6: \"Home Finance - Off-Plan (Wafi Programme)\" with a newer load_timestamp\n\nSELECT customer_id, first_name, last_name, national_id_or_iqama\nFROM banking.silver.dim_customer LIMIT 3;   -- A***, A***, ******3671\n\nDESCRIBE HISTORY banking.silver.dim_product;  -- latest operation = MERGE"
+    }
+   ]
+  },
+  {
+   "id": "step-11",
+   "num": "11",
+   "title": "Gold: re-delinquency KPIs",
+   "layer": "gold",
+   "tip": "Test the 30-day flag on the worked example from Step 1 before you trust the totals.",
+   "tip_ar": "اختبر علامة الـ 30 يومًا على مثال الخطوة 1 قبل أن تثق بالإجماليات.",
+   "blocks": [
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Purpose:",
+       "b": 1
+      },
+      {
+       "t": " flag every 30-day re-delinquency and aggregate it into a branch × product KPI table the business can query."
+      }
+     ]
+    },
+    {
+     "type": "h",
+     "level": 3,
+     "text": "Actions"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "In the Git folder, Create → Folder → "
+         },
+         {
+          "t": "gold",
+          "c": 1
+         },
+         {
+          "t": ". In it, create the notebook "
+         },
+         {
+          "t": "redelinquency_analysis",
+          "c": 1
+         },
+         {
+          "t": " on Serverless and type in:"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "python",
+     "text": "# Gold: banking.silver.fact_repayment -> banking.gold.fact_redelinquency_event + banking.gold.agg_redelinquency_branch_product\nfrom pyspark.sql.functions import (col, lag, datediff, when, count, sum as _sum, avg,\n                                   round as _round, current_timestamp)\nfrom pyspark.sql.window import Window\n\nfact = spark.read.table(\"banking.silver.fact_repayment\")   # batch read: window + lag need the full history\n\n# Same customer, same product, in due-date order\nw = Window.partitionBy(\"customer_id\", \"product_code\").orderBy(\"due_date\")\n\nevents = (\n    fact\n    .withColumn(\"prev_cure_date\", lag(\"cure_date\").over(w))\n    .withColumn(\"days_since_last_cure\", datediff(col(\"due_date\"), col(\"prev_cure_date\")))\n    .withColumn(\n        \"redelinquency_30d_flag\",\n        when(col(\"days_since_last_cure\").between(0, 30), 1).otherwise(0)\n    )\n)\n\n# Event-level table (needed for month-over-month trends and Genie)\n(events.withColumn(\"gold_load_timestamp\", current_timestamp())\n    .write.mode(\"overwrite\").option(\"overwriteSchema\", \"true\")\n    .saveAsTable(\"banking.gold.fact_redelinquency_event\"))\n\n# KPI table: grain = branch x product\nkpi = (\n    events.groupBy(\"branch_id\", \"branch_name\", \"region\",\n                   \"product_code\", \"product_desc\", \"product_type\", \"shariah_structure\")\n    .agg(\n        count(\"*\").alias(\"total_events\"),\n        _sum(\"redelinquency_30d_flag\").alias(\"total_redelinquencies\"),\n        _round(_sum(\"redelinquency_30d_flag\") / count(\"*\") * 100, 2).alias(\"redelinquency_rate\"),\n        _round(_sum(\"installment_amount_sar\"), 2).alias(\"total_amount_sar\"),\n        _round(avg(\"installment_amount_sar\"), 2).alias(\"avg_amount_sar\"),\n    )\n    .withColumn(\"gold_load_timestamp\", current_timestamp())\n)\n\n(kpi.write.mode(\"overwrite\").option(\"overwriteSchema\", \"true\")\n    .saveAsTable(\"banking.gold.agg_redelinquency_branch_product\"))\n\ndisplay(kpi.orderBy(col(\"redelinquency_rate\").desc()))"
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "How the logic works:"
+      }
+     ]
+    },
+    {
+     "type": "ul",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "lag(\"cure_date\")",
+          "c": 1
+         },
+         {
+          "t": " brings the previous event's cure date onto the current row."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "datediff(due_date, prev_cure_date)",
+          "c": 1
+         },
+         {
+          "t": " counts days from cure to the next missed installment."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "0–30 days = re-delinquent (flag 1). A first event, or one after an open (uncured) event, has a null gap and gets 0."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "redelinquency_rate",
+          "c": 1
+         },
+         {
+          "t": " is a percentage. Amounts are installment amounts in SAR."
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Run the notebook."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Open a SQL editor (SQL → SQL Editor, serverless SQL warehouse) and run the three business questions."
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Q1. Which branch has the highest re-delinquency rate?",
+       "b": 1
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "sql",
+     "text": "SELECT branch_id, branch_name, region,\n       SUM(total_events)          AS events,\n       SUM(total_redelinquencies) AS redelinquencies,\n       ROUND(SUM(total_redelinquencies) * 100.0 / SUM(total_events), 2) AS rate_pct\nFROM banking.gold.agg_redelinquency_branch_product\nGROUP BY branch_id, branch_name, region\nORDER BY rate_pct DESC, redelinquencies DESC\nLIMIT 5;\n-- top row: BR004 Jeddah Tahlia, Makkah region, 3 events, 2 re-delinquencies, 66.67%"
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Q2. Which product drives most re-delinquencies?",
+       "b": 1
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "sql",
+     "text": "SELECT product_type, product_code, product_desc,\n       SUM(total_redelinquencies) AS redelinquencies,\n       ROUND(SUM(total_redelinquencies) * 100.0\n             / SUM(SUM(total_redelinquencies)) OVER (), 2) AS share_of_all_pct\nFROM banking.gold.agg_redelinquency_branch_product\nGROUP BY product_type, product_code, product_desc\nHAVING SUM(total_redelinquencies) > 0\nORDER BY redelinquencies DESC, product_code;\n-- PF02 and CC02 lead with 2 each (25% each); by product_type, Credit Card = 4 of 8 (50%)"
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Q3. Month-over-month trend",
+       "b": 1
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "sql",
+     "text": "WITH m AS (\n  SELECT due_month,\n         COUNT(*)                    AS events,\n         SUM(redelinquency_30d_flag) AS redelinquencies\n  FROM banking.gold.fact_redelinquency_event\n  GROUP BY due_month\n)\nSELECT due_month, events, redelinquencies,\n       ROUND(redelinquencies * 100.0 / events, 2)          AS rate_pct,\n       redelinquencies - LAG(redelinquencies) OVER (ORDER BY due_month) AS mom_change\nFROM m\nORDER BY due_month;\n-- 2026-06: 6 / 0 | 2026-07: 8 / 3 | 2026-08: 7 / 3 | 2026-09: 7 / 2 | 2026-10: 2 / 0"
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Commit:",
+       "b": 1
+      },
+      {
+       "t": " Git folder → branch name → tick "
+      },
+      {
+       "t": "gold/redelinquency_analysis",
+       "c": 1
+      },
+      {
+       "t": " → message "
+      },
+      {
+       "t": "step 11: gold KPIs",
+       "c": 1
+      },
+      {
+       "t": " → Commit & Push. Your repo now has "
+      },
+      {
+       "t": "raw_data/",
+       "c": 1
+      },
+      {
+       "t": ", "
+      },
+      {
+       "t": "bronze/",
+       "c": 1
+      },
+      {
+       "t": ", "
+      },
+      {
+       "t": "silver/",
+       "c": 1
+      },
+      {
+       "t": " and "
+      },
+      {
+       "t": "gold/",
+       "c": 1
+      },
+      {
+       "t": "; Step 12 adds nothing to it."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Check:",
+       "b": 1
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "sql",
+     "text": "SELECT SUM(total_events), SUM(total_redelinquencies) FROM banking.gold.agg_redelinquency_branch_product;  -- 30, 8\n\nSELECT event_id FROM banking.gold.fact_redelinquency_event\nWHERE redelinquency_30d_flag = 1 ORDER BY event_id;\n-- EVT0002, EVT0005, EVT0006, EVT0008, EVT0010, EVT0015, EVT0021, EVT0025"
+    }
+   ]
+  },
+  {
+   "id": "step-12",
+   "num": "12",
+   "title": "Lakeflow Job",
+   "layer": "orchestration",
+   "tip": "Let independent tasks run in parallel; only the fact waits for every dimension.",
+   "tip_ar": "دع المهام المستقلة تعمل بالتوازي؛ جدول الحقائق وحده ينتظر كل الأبعاد.",
+   "blocks": [
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Purpose:",
+       "b": 1
+      },
+      {
+       "t": " run the nine notebooks as one dependency-aware pipeline on serverless compute."
+      }
+     ]
+    },
+    {
+     "type": "h",
+     "level": 3,
+     "text": "Actions"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Workspace → "
+         },
+         {
+          "t": "Jobs & Pipelines",
+          "b": 1
+         },
+         {
+          "t": " → Create → "
+         },
+         {
+          "t": "Job",
+          "b": 1
+         },
+         {
+          "t": ". Name it "
+         },
+         {
+          "t": "banking_end_to_end_job",
+          "c": 1
+         },
+         {
+          "t": "."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "For each row below: Add task → Type "
+         },
+         {
+          "t": "Notebook",
+          "b": 1
+         },
+         {
+          "t": " → Source "
+         },
+         {
+          "t": "Workspace",
+          "b": 1
+         },
+         {
+          "t": " → Path = the notebook in your Git folder → Compute "
+         },
+         {
+          "t": "Serverless",
+          "b": 1
+         },
+         {
+          "t": " → Depends on = the listed tasks → Create task."
+         }
+        ]
+       },
+       {
+        "type": "ol",
+        "items": [
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "The first task form opens by itself after you create the job. "
+            },
+            {
+             "t": "Task name",
+             "b": 1
+            },
+            {
+             "t": ": "
+            },
+            {
+             "t": "bronze_customers",
+             "c": 1
+            },
+            {
+             "t": "."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Type",
+             "b": 1
+            },
+            {
+             "t": ": Notebook. "
+            },
+            {
+             "t": "Source",
+             "b": 1
+            },
+            {
+             "t": ": Workspace (the notebook is already in your Git folder)."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Path",
+             "b": 1
+            },
+            {
+             "t": ": click the field → Workspace → Users → your user → "
+            },
+            {
+             "t": "azure-databricks-najd-bank-redelinquency",
+             "c": 1
+            },
+            {
+             "t": " → "
+            },
+            {
+             "t": "bronze",
+             "c": 1
+            },
+            {
+             "t": " → "
+            },
+            {
+             "t": "customers_raw_data_ingestion",
+             "c": 1
+            },
+            {
+             "t": " → "
+            },
+            {
+             "t": "Confirm",
+             "b": 1
+            },
+            {
+             "t": "."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Compute",
+             "b": 1
+            },
+            {
+             "t": ": Serverless. If a cluster is pre-selected, open the dropdown and pick Serverless."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Depends on",
+             "b": 1
+            },
+            {
+             "t": ": leave empty for the four bronze tasks. Leave Parameters and Libraries empty. Click "
+            },
+            {
+             "t": "Create task",
+             "b": 1
+            },
+            {
+             "t": "."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Add the next task: "
+            },
+            {
+             "t": "+ Add task",
+             "b": 1
+            },
+            {
+             "t": " (under the task graph) → "
+            },
+            {
+             "t": "Notebook",
+             "b": 1
+            },
+            {
+             "t": ", then fill in name, type, source, path and compute from the next table row."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Watch "
+            },
+            {
+             "t": "Depends on",
+             "b": 1
+            },
+            {
+             "t": ": the editor pre-fills it with the task that was selected when you clicked + Add task. Clear it for bronze tasks. For silver and gold tasks, pick every task listed in the table's last column, and keep "
+            },
+            {
+             "t": "Run if dependencies",
+             "b": 1
+            },
+            {
+             "t": " = All succeeded."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Repeat for all 9 rows. The graph should show 4 bronze tasks side by side, each with an arrow to its dim, all dims plus "
+            },
+            {
+             "t": "bronze_repayments",
+             "c": 1
+            },
+            {
+             "t": " pointing to "
+            },
+            {
+             "t": "silver_fact_repayment",
+             "c": 1
+            },
+            {
+             "t": ", then "
+            },
+            {
+             "t": "gold_redelinquency",
+             "c": 1
+            },
+            {
+             "t": "."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Click the job name at the top to rename it if needed. Changes save automatically."
+            }
+           ]
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "table",
+     "head": [
+      [
+       {
+        "t": "Task key"
+       }
+      ],
+      [
+       {
+        "t": "Notebook"
+       }
+      ],
+      [
+       {
+        "t": "Depends on"
+       }
+      ]
+     ],
+     "rows": [
+      [
+       [
+        {
+         "t": "bronze_customers",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "bronze/customers_raw_data_ingestion",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "—"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "bronze_branches",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "bronze/branches_raw_data_ingestion",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "—"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "bronze_products",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "bronze/products_raw_data_ingestion",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "—"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "bronze_repayments",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "bronze/repayments_raw_data_ingestion",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "—"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "silver_dim_customer",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "silver/dim_customer_ingestion",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "bronze_customers",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "silver_dim_branch",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "silver/dim_branch_ingestion",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "bronze_branches",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "silver_dim_product",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "silver/dim_product_ingestion",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "bronze_products",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "silver_fact_repayment",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "silver/fact_repayment_ingestion",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "silver_dim_customer",
+         "c": 1
+        },
+        {
+         "t": ", "
+        },
+        {
+         "t": "silver_dim_branch",
+         "c": 1
+        },
+        {
+         "t": ", "
+        },
+        {
+         "t": "silver_dim_product",
+         "c": 1
+        },
+        {
+         "t": ", "
+        },
+        {
+         "t": "bronze_repayments",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "gold_redelinquency",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "gold/redelinquency_analysis",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "silver_fact_repayment",
+         "c": 1
+        }
+       ]
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "The four bronze tasks run in parallel. Each dim waits only for its own bronze task. The fact waits for all dims, and gold runs last."
+      }
+     ]
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Optional: Schedules & Triggers → Add trigger → Scheduled, daily at 06:00 Asia/Riyadh, after the nightly core-banking extract lands. Or use a "
+         },
+         {
+          "t": "File arrival",
+          "b": 1
+         },
+         {
+          "t": " trigger on "
+         },
+         {
+          "t": "abfss://data@<storage-account>.dfs.core.windows.net/staging/",
+          "c": 1
+         },
+         {
+          "t": "."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Click "
+         },
+         {
+          "t": "Run now",
+          "b": 1
+         },
+         {
+          "t": "."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "When the run succeeds, open the job → ⋮ (kebab menu) → "
+         },
+         {
+          "t": "Edit as YAML",
+          "b": 1
+         },
+         {
+          "t": " (or View as code → YAML) and copy the YAML. You need it in Step 13."
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Check:",
+       "b": 1
+      },
+      {
+       "t": " Runs tab → the latest run shows 9 green tasks in the graph, and the gold counts from Step 11 are unchanged (rerunning ingests no new files)."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "step-13",
+   "num": "13",
+   "title": "Databricks Asset Bundle",
+   "layer": "cicd",
+   "tip": "Keep notebook path extensions identical to what Git stores (.py or .ipynb).",
+   "tip_ar": "اجعل امتدادات مسارات الدفاتر مطابقة لما يحفظه Git (‎.py أو ‎.ipynb).",
+   "blocks": [
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Purpose:",
+       "b": 1
+      },
+      {
+       "t": " define the job as code so the same pipeline deploys to dev and prod from Git."
+      }
+     ]
+    },
+    {
+     "type": "h",
+     "level": 3,
+     "text": "Actions"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "In the repo root, create "
+         },
+         {
+          "t": "databricks.yml",
+          "c": 1
+         },
+         {
+          "t": ":"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "yaml",
+     "text": "bundle:\n  name: banking-end-to-end-project\n\ninclude:\n  - resources/*.yml\n\ntargets:\n  dev:\n    mode: development\n    default: true\n    workspace:\n      host: https://<workspace-host>\n\n  prod:\n    mode: production\n    workspace:\n      host: https://<workspace-host>\n      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Create "
+         },
+         {
+          "t": "resources/job.yml",
+          "c": 1
+         },
+         {
+          "t": ". Start from the YAML you copied in Step 12, then change every "
+         },
+         {
+          "t": "notebook_path",
+          "c": 1
+         },
+         {
+          "t": " to a path "
+         },
+         {
+          "t": "relative to this file",
+          "b": 1
+         },
+         {
+          "t": " and delete any "
+         },
+         {
+          "t": "source:",
+          "c": 1
+         },
+         {
+          "t": " or "
+         },
+         {
+          "t": "git_source:",
+          "c": 1
+         },
+         {
+          "t": " lines:"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "yaml",
+     "text": "resources:\n  jobs:\n    banking_end_to_end_job:\n      name: banking_end_to_end_job\n      max_concurrent_runs: 1\n      queue:\n        enabled: true\n      tasks:\n        - task_key: bronze_customers\n          notebook_task:\n            notebook_path: ../bronze/customers_raw_data_ingestion.py\n        - task_key: bronze_branches\n          notebook_task:\n            notebook_path: ../bronze/branches_raw_data_ingestion.py\n        - task_key: bronze_products\n          notebook_task:\n            notebook_path: ../bronze/products_raw_data_ingestion.py\n        - task_key: bronze_repayments\n          notebook_task:\n            notebook_path: ../bronze/repayments_raw_data_ingestion.py\n\n        - task_key: silver_dim_customer\n          depends_on:\n            - task_key: bronze_customers\n          notebook_task:\n            notebook_path: ../silver/dim_customer_ingestion.py\n        - task_key: silver_dim_branch\n          depends_on:\n            - task_key: bronze_branches\n          notebook_task:\n            notebook_path: ../silver/dim_branch_ingestion.py\n        - task_key: silver_dim_product\n          depends_on:\n            - task_key: bronze_products\n          notebook_task:\n            notebook_path: ../silver/dim_product_ingestion.py\n\n        - task_key: silver_fact_repayment\n          depends_on:\n            - task_key: silver_dim_customer\n            - task_key: silver_dim_branch\n            - task_key: silver_dim_product\n            - task_key: bronze_repayments\n          notebook_task:\n            notebook_path: ../silver/fact_repayment_ingestion.py\n\n        - task_key: gold_redelinquency\n          depends_on:\n            - task_key: silver_fact_repayment\n          notebook_task:\n            notebook_path: ../gold/redelinquency_analysis.py"
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Extension must match the file in Git.",
+       "b": 1
+      },
+      {
+       "t": " Databricks Git folders commit notebooks as "
+      },
+      {
+       "t": ".py",
+       "c": 1
+      },
+      {
+       "t": " source files by default, so the paths above end in "
+      },
+      {
+       "t": ".py",
+       "c": 1
+      },
+      {
+       "t": ". Check your repo on GitHub: if your notebooks show as "
+      },
+      {
+       "t": ".ipynb",
+       "c": 1
+      },
+      {
+       "t": " (the reference repo uses that format), use "
+      },
+      {
+       "t": ".ipynb",
+       "c": 1
+      },
+      {
+       "t": " instead. A path with no extension, as the UI export gives, fails with \"notebook not found\"."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "No cluster block is needed: notebook tasks without compute settings run on serverless."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Create both files in the Git folder: Create → File for "
+      },
+      {
+       "t": "databricks.yml",
+       "c": 1
+      },
+      {
+       "t": " at the root, and Create → Folder → "
+      },
+      {
+       "t": "resources",
+       "c": 1
+      },
+      {
+       "t": ", then Create → File → "
+      },
+      {
+       "t": "job.yml",
+       "c": 1
+      },
+      {
+       "t": " inside it."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Commit:",
+       "b": 1
+      },
+      {
+       "t": " Git folder → branch name → tick "
+      },
+      {
+       "t": "databricks.yml",
+       "c": 1
+      },
+      {
+       "t": " and "
+      },
+      {
+       "t": "resources/job.yml",
+       "c": 1
+      },
+      {
+       "t": " → message "
+      },
+      {
+       "t": "step 13: asset bundle",
+       "c": 1
+      },
+      {
+       "t": " → Commit & Push."
+      }
+     ]
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Install the Databricks CLI on your laptop and authenticate:"
+         }
+        ]
+       },
+       {
+        "type": "ol",
+        "items": [
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Install.",
+             "b": 1
+            },
+            {
+             "t": " Windows: open PowerShell → "
+            },
+            {
+             "t": "winget install Databricks.DatabricksCLI",
+             "c": 1
+            },
+            {
+             "t": " → close and reopen PowerShell. macOS: "
+            },
+            {
+             "t": "brew tap databricks/tap",
+             "c": 1
+            },
+            {
+             "t": " then "
+            },
+            {
+             "t": "brew install databricks",
+             "c": 1
+            },
+            {
+             "t": ". Linux or WSL: the "
+            },
+            {
+             "t": "curl ... install.sh | sh",
+             "c": 1
+            },
+            {
+             "t": " line below."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Verify.",
+             "b": 1
+            },
+            {
+             "t": " Run "
+            },
+            {
+             "t": "databricks -v",
+             "c": 1
+            },
+            {
+             "t": ". It prints a version (v0.2xx or later). \"Not recognized\" means the terminal has not picked up the new PATH: reopen it."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Create a token.",
+             "b": 1
+            },
+            {
+             "t": " Workspace → your user icon (top right) → "
+            },
+            {
+             "t": "Settings",
+             "b": 1
+            },
+            {
+             "t": " → "
+            },
+            {
+             "t": "Developer",
+             "b": 1
+            },
+            {
+             "t": " → Access tokens → "
+            },
+            {
+             "t": "Manage",
+             "b": 1
+            },
+            {
+             "t": " → "
+            },
+            {
+             "t": "Generate new token",
+             "b": 1
+            },
+            {
+             "t": " → comment "
+            },
+            {
+             "t": "local-cli",
+             "c": 1
+            },
+            {
+             "t": ", lifetime 90 days → Generate. Copy it now; it is shown only once."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Configure.",
+             "b": 1
+            },
+            {
+             "t": " Run "
+            },
+            {
+             "t": "databricks configure --token",
+             "c": 1
+            },
+            {
+             "t": ". At "
+            },
+            {
+             "t": "Databricks host",
+             "b": 1
+            },
+            {
+             "t": " paste "
+            },
+            {
+             "t": "https://<workspace-host>",
+             "c": 1
+            },
+            {
+             "t": " (no trailing slash). At "
+            },
+            {
+             "t": "Personal access token",
+             "b": 1
+            },
+            {
+             "t": " paste the token (nothing appears as you paste; press Enter). This writes a "
+            },
+            {
+             "t": "DEFAULT",
+             "c": 1
+            },
+            {
+             "t": " profile to "
+            },
+            {
+             "t": "~/.databrickscfg",
+             "c": 1
+            },
+            {
+             "t": " (Windows: "
+            },
+            {
+             "t": "C:\\Users\\<you>\\.databrickscfg",
+             "c": 1
+            },
+            {
+             "t": ")."
+            }
+           ]
+          },
+          {
+           "type": "ol",
+           "items": [
+            [
+             {
+              "type": "p",
+              "segs": [
+               {
+                "t": "Find your host: open the workspace in the browser and copy the address bar up to "
+               },
+               {
+                "t": ".net",
+                "c": 1
+               },
+               {
+                "t": ", for example "
+               },
+               {
+                "t": "https://adb-1234567890123456.7.azuredatabricks.net",
+                "c": 1
+               },
+               {
+                "t": ". Drop anything after it ("
+               },
+               {
+                "t": "/?o=...",
+                "c": 1
+               },
+               {
+                "t": ", "
+               },
+               {
+                "t": "/browse",
+                "c": 1
+               },
+               {
+                "t": ")."
+               }
+              ]
+             }
+            ],
+            [
+             {
+              "type": "p",
+              "segs": [
+               {
+                "t": "In the terminal, run the command and answer the two prompts:"
+               }
+              ]
+             }
+            ]
+           ]
+          },
+          {
+           "type": "code",
+           "lang": "text",
+           "text": "$ databricks configure --token\nDatabricks host: https://adb-1234567890123456.7.azuredatabricks.net\nPersonal access token: ****************************"
+          },
+          {
+           "type": "ol",
+           "items": [
+            [
+             {
+              "type": "p",
+              "segs": [
+               {
+                "t": "Check the file it wrote (macOS/Linux: "
+               },
+               {
+                "t": "cat ~/.databrickscfg",
+                "c": 1
+               },
+               {
+                "t": "; Windows: "
+               },
+               {
+                "t": "type %USERPROFILE%\\.databrickscfg",
+                "c": 1
+               },
+               {
+                "t": "). It should look like this:"
+               }
+              ]
+             }
+            ]
+           ]
+          },
+          {
+           "type": "code",
+           "lang": "ini",
+           "text": "[DEFAULT]\nhost  = https://adb-1234567890123456.7.azuredatabricks.net\ntoken = dapi****************************"
+          },
+          {
+           "type": "ol",
+           "items": [
+            [
+             {
+              "type": "p",
+              "segs": [
+               {
+                "t": "Wrong value? Run "
+               },
+               {
+                "t": "databricks configure --token",
+                "c": 1
+               },
+               {
+                "t": " again; it overwrites the "
+               },
+               {
+                "t": "DEFAULT",
+                "c": 1
+               },
+               {
+                "t": " profile."
+               }
+              ]
+             }
+            ],
+            [
+             {
+              "type": "p",
+              "segs": [
+               {
+                "t": "The token works like a password: never commit "
+               },
+               {
+                "t": ".databrickscfg",
+                "c": 1
+               },
+               {
+                "t": " or paste the token into notebooks or YAML. GitHub gets its own copy as a secret in Step 14."
+               }
+              ]
+             }
+            ]
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Test.",
+             "b": 1
+            },
+            {
+             "t": " Run "
+            },
+            {
+             "t": "databricks current-user me",
+             "c": 1
+            },
+            {
+             "t": ". It prints your user name and email. A 401/403 error means a wrong host or token: rerun step 4."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Optional: instead of a token, "
+            },
+            {
+             "t": "databricks auth login --host https://<workspace-host>",
+             "c": 1
+            },
+            {
+             "t": " signs in through the browser (OAuth). The bundle commands work the same with either."
+            }
+           ]
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "What the code below does:",
+       "b": 1
+      },
+      {
+       "t": " it is the same setup as sub-steps 1–6 above, as commands you can copy. Line by line:"
+      }
+     ]
+    },
+    {
+     "type": "ul",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "curl ... install.sh | sh",
+          "c": 1
+         },
+         {
+          "t": " installs the Databricks CLI on macOS/Linux (Windows uses the "
+         },
+         {
+          "t": "winget",
+          "c": 1
+         },
+         {
+          "t": " line instead). On a Mac, add "
+         },
+         {
+          "t": "sudo",
+          "c": 1
+         },
+         {
+          "t": " before "
+         },
+         {
+          "t": "sh",
+          "c": 1
+         },
+         {
+          "t": " if it asks for permission."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "databricks -v",
+          "c": 1
+         },
+         {
+          "t": " checks the install by printing the CLI version."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "The "
+         },
+         {
+          "t": "# Create a token first",
+          "c": 1
+         },
+         {
+          "t": " comment reminds you to generate a personal access token in the workspace (sub-step 3)."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "databricks configure --token",
+          "c": 1
+         },
+         {
+          "t": " saves your workspace host and token to "
+         },
+         {
+          "t": "~/.databrickscfg",
+          "c": 1
+         },
+         {
+          "t": ", so later commands ("
+         },
+         {
+          "t": "databricks bundle validate",
+          "c": 1
+         },
+         {
+          "t": " / "
+         },
+         {
+          "t": "deploy",
+          "c": 1
+         },
+         {
+          "t": " / "
+         },
+         {
+          "t": "run",
+          "c": 1
+         },
+         {
+          "t": " in action 4) know which workspace to talk to and are allowed to."
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "You run it once per laptop. If you already finished sub-steps 1–6, you can skip this block."
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "bash",
+     "text": "# macOS / Linux\ncurl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh\n# Windows: winget install Databricks.DatabricksCLI\n\ndatabricks -v\n\n# Create a token first: workspace -> your user icon -> Settings -> Developer -> Access tokens -> Generate new token\ndatabricks configure --token\n# Databricks Host: https://<workspace-host>\n# Personal Access Token: <paste token>"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Clone the repo locally, switch to your feature branch, then validate and deploy:"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "bash",
+     "text": "git clone https://github.com/<your-org>/azure-databricks-najd-bank-redelinquency.git\ncd azure-databricks-najd-bank-redelinquency\ngit checkout feature/initial-pipeline\n\ndatabricks bundle validate\ndatabricks bundle deploy -t dev\ndatabricks bundle run -t dev banking_end_to_end_job\n\n# Production deploy (normally done by CI in Step 14)\ndatabricks bundle deploy -t prod"
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "In dev mode the job is named "
+      },
+      {
+       "t": "[dev <your-user>] banking_end_to_end_job",
+       "c": 1
+      },
+      {
+       "t": " and its schedules are paused. Prod uses the exact name and the "
+      },
+      {
+       "t": "root_path",
+       "c": 1
+      },
+      {
+       "t": " above."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "This guide uses one "
+      },
+      {
+       "t": "banking",
+       "c": 1
+      },
+      {
+       "t": " catalog for both targets to stay simple. In a real bank, point dev and prod at separate catalogs (for example with a bundle variable passed as a notebook parameter) or separate workspaces."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Pitfall — absolute paths:",
+       "b": 1
+      },
+      {
+       "t": " if "
+      },
+      {
+       "t": "job.yml",
+       "c": 1
+      },
+      {
+       "t": " still holds "
+      },
+      {
+       "t": "/Workspace/Users/.../bronze/...",
+       "c": 1
+      },
+      {
+       "t": ", the bundle deploys but the job runs the old notebooks in your home folder, or fails in prod with \"notebook not found\". Always use "
+      },
+      {
+       "t": "../bronze/...",
+       "c": 1
+      },
+      {
+       "t": "."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Check:",
+       "b": 1
+      },
+      {
+       "t": " "
+      },
+      {
+       "t": "databricks bundle validate",
+       "c": 1
+      },
+      {
+       "t": " prints \"Validation OK!\", and Jobs & Pipelines lists "
+      },
+      {
+       "t": "[dev <your-user>] banking_end_to_end_job",
+       "c": 1
+      },
+      {
+       "t": " with 9 tasks."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "step-14",
+   "num": "14",
+   "title": "GitHub Actions CI/CD",
+   "layer": "cicd",
+   "tip": "Keep the workspace host identical on every branch, or move it into a per-target variable.",
+   "tip_ar": "أبقِ عنوان مساحة العمل نفسه في كل فرع، أو انقله إلى متغير لكل بيئة.",
+   "blocks": [
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Purpose:",
+       "b": 1
+      },
+      {
+       "t": " deploy the bundle automatically: a merge to "
+      },
+      {
+       "t": "dev",
+       "c": 1
+      },
+      {
+       "t": " deploys dev, a merge to "
+      },
+      {
+       "t": "main",
+       "c": 1
+      },
+      {
+       "t": " deploys prod."
+      }
+     ]
+    },
+    {
+     "type": "h",
+     "level": 3,
+     "text": "Actions"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "GitHub repo → Settings → Secrets and variables → Actions → New repository secret. Add:"
+         }
+        ]
+       },
+       {
+        "type": "ul",
+        "items": [
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "DATABRICKS_HOST",
+             "c": 1
+            },
+            {
+             "t": " = "
+            },
+            {
+             "t": "https://<workspace-host>",
+             "c": 1
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "DATABRICKS_TOKEN",
+             "c": 1
+            },
+            {
+             "t": " = a personal access token (use a service principal token in production)"
+            }
+           ]
+          }
+         ]
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "In your local clone from Step 13, run "
+         },
+         {
+          "t": "git pull",
+          "c": 1
+         },
+         {
+          "t": ", then create the folder "
+         },
+         {
+          "t": ".github/workflows/",
+          "c": 1
+         },
+         {
+          "t": " and the file "
+         },
+         {
+          "t": "deploy-dev.yml",
+          "c": 1
+         },
+         {
+          "t": " in it:"
+         }
+        ]
+       },
+       {
+        "type": "ol",
+        "items": [
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Open Terminal and go to your clone: "
+            },
+            {
+             "t": "cd ~/azure-databricks-najd-bank-redelinquency",
+             "c": 1
+            },
+            {
+             "t": " (use the folder where you ran "
+            },
+            {
+             "t": "git clone",
+             "c": 1
+            },
+            {
+             "t": " in Step 13)."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Make sure you are on the feature branch and up to date: "
+            },
+            {
+             "t": "git checkout feature/initial-pipeline",
+             "c": 1
+            },
+            {
+             "t": " then "
+            },
+            {
+             "t": "git pull",
+             "c": 1
+            },
+            {
+             "t": "."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Create the folder: "
+            },
+            {
+             "t": "mkdir -p .github/workflows",
+             "c": 1
+            },
+            {
+             "t": ". The leading dot makes it hidden; in Finder press Cmd+Shift+. to see it."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Create the file: "
+            },
+            {
+             "t": "nano .github/workflows/deploy-dev.yml",
+             "c": 1
+            },
+            {
+             "t": ", paste the YAML below, save with Ctrl+O then Enter, exit with Ctrl+X. (VS Code users: "
+            },
+            {
+             "t": "code .github/workflows/deploy-dev.yml",
+             "c": 1
+            },
+            {
+             "t": ".)"
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Check it: "
+            },
+            {
+             "t": "ls -a .github/workflows",
+             "c": 1
+            },
+            {
+             "t": " lists "
+            },
+            {
+             "t": "deploy-dev.yml",
+             "c": 1
+            },
+            {
+             "t": ", and "
+            },
+            {
+             "t": "cat .github/workflows/deploy-dev.yml",
+             "c": 1
+            },
+            {
+             "t": " shows the YAML with its indentation intact (spaces, no tabs)."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Repeat sub-steps 4–5 for "
+            },
+            {
+             "t": "deploy-prod.yml",
+             "c": 1
+            },
+            {
+             "t": " in action 3."
+            }
+           ]
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "yaml",
+     "text": "name: Deploy bundle to dev\n\non:\n  push:\n    branches:\n      - dev\n\njobs:\n  deploy-dev:\n    runs-on: ubuntu-latest\n    env:\n      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}\n      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}\n    steps:\n      - name: Checkout\n        uses: actions/checkout@v4\n\n      - name: Set up Databricks CLI\n        uses: databricks/setup-cli@main\n\n      - name: Validate bundle\n        run: databricks bundle validate -t dev\n\n      - name: Deploy bundle\n        run: databricks bundle deploy -t dev"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Create "
+         },
+         {
+          "t": ".github/workflows/deploy-prod.yml",
+          "c": 1
+         },
+         {
+          "t": ":"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "yaml",
+     "text": "name: Deploy bundle to prod\n\non:\n  push:\n    branches:\n      - main\n\njobs:\n  deploy-prod:\n    runs-on: ubuntu-latest\n    env:\n      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}\n      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}\n    steps:\n      - name: Checkout\n        uses: actions/checkout@v4\n\n      - name: Set up Databricks CLI\n        uses: databricks/setup-cli@main\n\n      - name: Validate bundle\n        run: databricks bundle validate -t prod\n\n      - name: Deploy bundle\n        run: databricks bundle deploy -t prod"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Commit and push from your local clone: "
+         },
+         {
+          "t": "git add .github",
+          "c": 1
+         },
+         {
+          "t": " → "
+         },
+         {
+          "t": "git commit -m \"step 14: CI/CD workflo/ws\"",
+          "c": 1
+         },
+         {
+          "t": " → "
+         },
+         {
+          "t": "git push",
+          "c": 1
+         },
+         {
+          "t": ". In the Databricks Git folder, click the branch name → Pull, so the workspace copy matches."
+         }
+        ]
+       },
+       {
+        "type": "ol",
+        "items": [
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "In Terminal, inside the clone, run "
+            },
+            {
+             "t": "git status",
+             "c": 1
+            },
+            {
+             "t": ". It lists "
+            },
+            {
+             "t": ".github/",
+             "c": 1
+            },
+            {
+             "t": " as untracked."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "git add .github",
+             "c": 1
+            },
+            {
+             "t": " stages both workflow files."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "git commit -m \"step 14: CI/CD workflows\"",
+             "c": 1
+            },
+            {
+             "t": ". If Git asks who you are, run "
+            },
+            {
+             "t": "git config --global user.name \"Your Name\"",
+             "c": 1
+            },
+            {
+             "t": " and "
+            },
+            {
+             "t": "git config --global user.email \"you@example.com\"",
+             "c": 1
+            },
+            {
+             "t": " once, then commit again."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "git push",
+             "c": 1
+            },
+            {
+             "t": ". If it asks for a password, paste a GitHub personal access token, not your GitHub password."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Pushing files under "
+            },
+            {
+             "t": ".github/workflows",
+             "c": 1
+            },
+            {
+             "t": " needs a token with "
+            },
+            {
+             "t": "Workflows = Read and write",
+             "b": 1
+            },
+            {
+             "t": " (fine-grained) or the "
+            },
+            {
+             "t": "workflow",
+             "c": 1
+            },
+            {
+             "t": " scope (classic). Without it, GitHub refuses with \"refusing to allow a Personal Access Token to create or update workflow\". Edit the token on GitHub, add that permission, and push again."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Check on GitHub: switch to branch "
+            },
+            {
+             "t": "feature/initial-pipeline",
+             "c": 1
+            },
+            {
+             "t": " and open "
+            },
+            {
+             "t": ".github/workflows/",
+             "c": 1
+            },
+            {
+             "t": "; both files are there. Nothing runs yet, because the workflows only trigger on "
+            },
+            {
+             "t": "dev",
+             "c": 1
+            },
+            {
+             "t": " and "
+            },
+            {
+             "t": "main",
+             "c": 1
+            },
+            {
+             "t": " (action 5)."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "In the Databricks Git folder: click the branch name → "
+            },
+            {
+             "t": "Pull",
+             "b": 1
+            },
+            {
+             "t": ", so the workspace copy also has the new files."
+            }
+           ]
+          }
+         ]
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Promote with pull requests:"
+         }
+        ]
+       },
+       {
+        "type": "ol",
+        "items": [
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "GitHub → Pull requests → New → base "
+            },
+            {
+             "t": "dev",
+             "c": 1
+            },
+            {
+             "t": " ← compare "
+            },
+            {
+             "t": "feature/initial-pipeline",
+             "c": 1
+            },
+            {
+             "t": " → Create → Merge. The dev workflow runs."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "New pull request → base "
+            },
+            {
+             "t": "main",
+             "c": 1
+            },
+            {
+             "t": " ← compare "
+            },
+            {
+             "t": "dev",
+             "c": 1
+            },
+            {
+             "t": " → Create → Merge. The prod workflow runs."
+            }
+           ]
+          }
+         ]
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Optional: Settings → Branches → add protection rules on "
+         },
+         {
+          "t": "main",
+          "c": 1
+         },
+         {
+          "t": " and "
+         },
+         {
+          "t": "dev",
+          "c": 1
+         },
+         {
+          "t": " (require a pull request and one approval)."
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Pitfall — wrong host on a branch:",
+       "b": 1
+      },
+      {
+       "t": " the CLI refuses to deploy when the "
+      },
+      {
+       "t": "host",
+       "c": 1
+      },
+      {
+       "t": " in "
+      },
+      {
+       "t": "databricks.yml",
+       "c": 1
+      },
+      {
+       "t": " on that branch does not match "
+      },
+      {
+       "t": "DATABRICKS_HOST",
+       "c": 1
+      },
+      {
+       "t": ", or when someone changed the host on "
+      },
+      {
+       "t": "dev",
+       "c": 1
+      },
+      {
+       "t": " and it was merged into "
+      },
+      {
+       "t": "main",
+       "c": 1
+      },
+      {
+       "t": ". Keep the host identical on every branch, or move it into a variable per target."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Check:",
+       "b": 1
+      },
+      {
+       "t": " GitHub → Actions shows a green run for each merge, and Jobs & Pipelines shows both "
+      },
+      {
+       "t": "[dev <user>] banking_end_to_end_job",
+       "c": 1
+      },
+      {
+       "t": " and "
+      },
+      {
+       "t": "banking_end_to_end_job",
+       "c": 1
+      },
+      {
+       "t": "."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "step-15",
+   "num": "15",
+   "title": "Genie space",
+   "layer": "ai",
+   "tip": "Add example questions with their expected answers. That is how you test Genie.",
+   "tip_ar": "أضف أسئلة نموذجية مع إجاباتها المتوقعة؛ هكذا تختبر Genie.",
+   "blocks": [
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Purpose:",
+       "b": 1
+      },
+      {
+       "t": " let collections and risk users ask re-delinquency questions in plain English, without writing SQL."
+      }
+     ]
+    },
+    {
+     "type": "h",
+     "level": 3,
+     "text": "Actions"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Grant read access to the business group (create the group in the account console first):"
+         }
+        ]
+       },
+       {
+        "type": "ol",
+        "items": [
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Create the group: go to "
+            },
+            {
+             "t": "https://accounts.azuredatabricks.net",
+             "c": 1
+            },
+            {
+             "t": " (or workspace → your user icon → "
+            },
+            {
+             "t": "Manage account",
+             "b": 1
+            },
+            {
+             "t": ") → "
+            },
+            {
+             "t": "User management",
+             "b": 1
+            },
+            {
+             "t": " → "
+            },
+            {
+             "t": "Groups",
+             "b": 1
+            },
+            {
+             "t": " tab → "
+            },
+            {
+             "t": "Add group",
+             "b": 1
+            },
+            {
+             "t": " → name "
+            },
+            {
+             "t": "collections-analysts",
+             "c": 1
+            },
+            {
+             "t": " → Save."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Add people: open the group → "
+            },
+            {
+             "t": "Members",
+             "b": 1
+            },
+            {
+             "t": " → "
+            },
+            {
+             "t": "Add members",
+             "b": 1
+            },
+            {
+             "t": " → pick users (add yourself to test) → Add."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Make the group visible in the workspace: account console → "
+            },
+            {
+             "t": "Workspaces",
+             "b": 1
+            },
+            {
+             "t": " → "
+            },
+            {
+             "t": "dbw-najd-banking",
+             "c": 1
+            },
+            {
+             "t": " → "
+            },
+            {
+             "t": "Permissions",
+             "b": 1
+            },
+            {
+             "t": " → "
+            },
+            {
+             "t": "Add permissions",
+             "b": 1
+            },
+            {
+             "t": " → "
+            },
+            {
+             "t": "collections-analysts",
+             "c": 1
+            },
+            {
+             "t": ", permission "
+            },
+            {
+             "t": "User",
+             "b": 1
+            },
+            {
+             "t": " → Save."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Run the grants: in the workspace open "
+            },
+            {
+             "t": "SQL Editor",
+             "b": 1
+            },
+            {
+             "t": " (or a notebook cell starting with "
+            },
+            {
+             "t": "%sql",
+             "c": 1
+            },
+            {
+             "t": "), pick your serverless SQL warehouse, paste the three GRANT lines below and click "
+            },
+            {
+             "t": "Run all",
+             "b": 1
+            },
+            {
+             "t": "."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Check: Catalog → "
+            },
+            {
+             "t": "banking",
+             "c": 1
+            },
+            {
+             "t": " → "
+            },
+            {
+             "t": "Permissions",
+             "b": 1
+            },
+            {
+             "t": " tab lists "
+            },
+            {
+             "t": "collections-analysts",
+             "c": 1
+            },
+            {
+             "t": " with USE CATALOG; the "
+            },
+            {
+             "t": "silver",
+             "c": 1
+            },
+            {
+             "t": " and "
+            },
+            {
+             "t": "gold",
+             "c": 1
+            },
+            {
+             "t": " schemas list USE SCHEMA and SELECT."
+            }
+           ]
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "sql",
+     "text": "GRANT USE CATALOG ON CATALOG banking TO `collections-analysts`;\nGRANT USE SCHEMA, SELECT ON SCHEMA banking.silver TO `collections-analysts`;\nGRANT USE SCHEMA, SELECT ON SCHEMA banking.gold   TO `collections-analysts`;"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Sidebar → "
+         },
+         {
+          "t": "Genie",
+          "b": 1
+         },
+         {
+          "t": " → New. Add data: "
+         },
+         {
+          "t": "banking.silver.fact_repayment",
+          "c": 1
+         },
+         {
+          "t": ", "
+         },
+         {
+          "t": "banking.gold.agg_redelinquency_branch_product",
+          "c": 1
+         },
+         {
+          "t": " and "
+         },
+         {
+          "t": "banking.gold.fact_redelinquency_event",
+          "c": 1
+         },
+         {
+          "t": " → Create."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Configure → Settings: title "
+         },
+         {
+          "t": "Najd National Bank – Re-delinquency",
+          "c": 1
+         },
+         {
+          "t": ", SQL warehouse = your serverless SQL warehouse."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Configure → Instructions → General instructions, paste:"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "text",
+     "text": "A delinquency event is one missed installment, from due_date to cure_date.\nA 30-day re-delinquency is an event whose due_date is 0-30 days after the previous cure_date\nfor the same customer_id and product_code. Use redelinquency_30d_flag = 1 in fact_redelinquency_event.\nredelinquency_rate in agg_redelinquency_branch_product is a percentage (0-100).\nAll amounts are in Saudi riyals (SAR). Dates are Gregorian.\nRegions are Saudi administrative regions. rm_id is the relationship manager.\nCustomer names and ID numbers are masked; never try to unmask them."
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Add these five sample questions (Configure → Settings → Sample questions), then ask each one:"
+         }
+        ]
+       },
+       {
+        "type": "ol",
+        "items": [
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Open your Genie space (sidebar → "
+            },
+            {
+             "t": "Genie",
+             "b": 1
+            },
+            {
+             "t": " → "
+            },
+            {
+             "t": "Najd National Bank – Re-delinquency",
+             "c": 1
+            },
+            {
+             "t": ")."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Top right → "
+            },
+            {
+             "t": "Configure",
+             "b": 1
+            },
+            {
+             "t": " (gear icon) → "
+            },
+            {
+             "t": "Settings",
+             "b": 1
+            },
+            {
+             "t": " tab → scroll to "
+            },
+            {
+             "t": "Sample questions",
+             "b": 1
+            },
+            {
+             "t": " → "
+            },
+            {
+             "t": "Add",
+             "b": 1
+            },
+            {
+             "t": "."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Paste question 1 from the table below → press Enter or the tick. Repeat for questions 2–5 → "
+            },
+            {
+             "t": "Save",
+             "b": 1
+            },
+            {
+             "t": ". They now appear as clickable chips on the space's start page for every user."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Close Configure. In the chat box at the bottom of the space, click a sample chip (or type the question) and press Enter."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Genie shows a table or chart. Click "
+            },
+            {
+             "t": "Show code",
+             "b": 1
+            },
+            {
+             "t": " to see the SQL it wrote, and compare the result with the \"Expected answer\" column."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Start a "
+            },
+            {
+             "t": "New chat",
+             "b": 1
+            },
+            {
+             "t": " (top left) before each question so earlier answers do not steer the next one. Labels can differ slightly between Databricks releases; look for the same words."
+            }
+           ]
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "table",
+     "head": [
+      [
+       {
+        "t": "#"
+       }
+      ],
+      [
+       {
+        "t": "Question"
+       }
+      ],
+      [
+       {
+        "t": "Expected answer from the sample data"
+       }
+      ]
+     ],
+     "rows": [
+      [
+       [
+        {
+         "t": "1"
+        }
+       ],
+       [
+        {
+         "t": "Which branch has the highest 30-day re-delinquency rate?"
+        }
+       ],
+       [
+        {
+         "t": "BR004 Jeddah Tahlia, 66.67% (2 of 3)"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "2"
+        }
+       ],
+       [
+        {
+         "t": "Which product type drives most re-delinquencies?"
+        }
+       ],
+       [
+        {
+         "t": "Credit Card, 4 of 8"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "3"
+        }
+       ],
+       [
+        {
+         "t": "Compare re-delinquency counts for Retail, Affluent and Private customers."
+        }
+       ],
+       [
+        {
+         "t": "Retail 4, Affluent 3, Private 1"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "4"
+        }
+       ],
+       [
+        {
+         "t": "Which relationship managers have more than one re-delinquency?"
+        }
+       ],
+       [
+        {
+         "t": "RM101 (2) and RM201 (2)"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "5"
+        }
+       ],
+       [
+        {
+         "t": "Show the monthly re-delinquency rate trend by region."
+        }
+       ],
+       [
+        {
+         "t": "Re-delinquencies in Jul–Sep only; none in Jun or Oct"
+        }
+       ]
+      ]
+     ]
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "When Genie answers correctly, click "
+         },
+         {
+          "t": "Save as trusted",
+          "b": 1
+         },
+         {
+          "t": " (or add the SQL under Instructions → SQL queries) so later answers reuse it."
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Check:",
+       "b": 1
+      },
+      {
+       "t": " all five questions return the expected answers, and Genie shows the SQL it ran under \"Show code\"."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "step-16",
+   "num": "16",
+   "title": "AI/BI dashboard and Databricks One",
+   "layer": "ai",
+   "tip": "Sign in as a business user to check what they really see.",
+   "tip_ar": "سجّل الدخول كمستخدم أعمال لترى ما يراه فعلًا.",
+   "blocks": [
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Purpose:",
+       "b": 1
+      },
+      {
+       "t": " give managers a published, shareable view of re-delinquency that they open from Databricks One."
+      }
+     ]
+    },
+    {
+     "type": "h",
+     "level": 3,
+     "text": "Actions"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Sidebar → "
+         },
+         {
+          "t": "Dashboards",
+          "b": 1
+         },
+         {
+          "t": " → Create dashboard. Rename it "
+         },
+         {
+          "t": "Najd National Bank – 30-Day Re-delinquency",
+          "c": 1
+         },
+         {
+          "t": "."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Data",
+          "b": 1
+         },
+         {
+          "t": " tab → Add data source → pick "
+         },
+         {
+          "t": "banking.gold.agg_redelinquency_branch_product",
+          "c": 1
+         },
+         {
+          "t": " and "
+         },
+         {
+          "t": "banking.gold.fact_redelinquency_event",
+          "c": 1
+         },
+         {
+          "t": ". Add one SQL dataset for the trend:"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "sql",
+     "text": "SELECT due_month, region, customer_segment, product_type, rm_id,\n       COUNT(*)                    AS events,\n       SUM(redelinquency_30d_flag) AS redelinquencies\nFROM banking.gold.fact_redelinquency_event\nGROUP BY ALL"
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Canvas",
+          "b": 1
+         },
+         {
+          "t": " tab → add a visualization → type a request into the AI assistant box (for example \"bar chart of re-delinquency rate by branch, sorted descending\"), review what it builds, then adjust fields by hand. Build these four visuals:"
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "table",
+     "head": [
+      [
+       {
+        "t": "#"
+       }
+      ],
+      [
+       {
+        "t": "Visual"
+       }
+      ],
+      [
+       {
+        "t": "Dataset"
+       }
+      ],
+      [
+       {
+        "t": "Fields"
+       }
+      ]
+     ],
+     "rows": [
+      [
+       [
+        {
+         "t": "1"
+        }
+       ],
+       [
+        {
+         "t": "Counter: overall 30-day re-delinquency rate"
+        }
+       ],
+       [
+        {
+         "t": "agg_redelinquency_branch_product"
+        }
+       ],
+       [
+        {
+         "t": "SUM(total_redelinquencies) / SUM(total_events), format as %"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "2"
+        }
+       ],
+       [
+        {
+         "t": "Horizontal bar: re-delinquency rate by branch"
+        }
+       ],
+       [
+        {
+         "t": "agg_redelinquency_branch_product"
+        }
+       ],
+       [
+        {
+         "t": "Y = branch_name, X = redelinquency_rate, colour = region"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "3"
+        }
+       ],
+       [
+        {
+         "t": "Stacked bar: re-delinquencies by product type and segment"
+        }
+       ],
+       [
+        {
+         "t": "trend dataset"
+        }
+       ],
+       [
+        {
+         "t": "X = product_type, Y = SUM(redelinquencies), colour = customer_segment"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "4"
+        }
+       ],
+       [
+        {
+         "t": "Line: monthly re-delinquencies and events"
+        }
+       ],
+       [
+        {
+         "t": "trend dataset"
+        }
+       ],
+       [
+        {
+         "t": "X = due_month, Y = SUM(redelinquencies) and SUM(events)"
+        }
+       ]
+      ]
+     ]
+    },
+    {
+     "type": "ol",
+     "items": [
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Add filters for "
+         },
+         {
+          "t": "region",
+          "c": 1
+         },
+         {
+          "t": ", "
+         },
+         {
+          "t": "product_type",
+          "c": 1
+         },
+         {
+          "t": " and "
+         },
+         {
+          "t": "rm_id",
+          "c": 1
+         },
+         {
+          "t": " (Add a filter → field → apply to all datasets that have it)."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Click "
+         },
+         {
+          "t": "Publish",
+          "b": 1
+         },
+         {
+          "t": " → keep \"Embed credentials\" on if viewers should see data without their own table grants, or turn it off to apply each viewer's Unity Catalog permissions → Publish."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Click "
+         },
+         {
+          "t": "Share",
+          "b": 1
+         },
+         {
+          "t": " → add "
+         },
+         {
+          "t": "collections-analysts",
+          "c": 1
+         },
+         {
+          "t": " with "
+         },
+         {
+          "t": "Can view",
+          "b": 1
+         },
+         {
+          "t": " (or share with all account users)."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "type": "p",
+        "segs": [
+         {
+          "t": "Users open "
+         },
+         {
+          "t": "Databricks One",
+          "b": 1
+         },
+         {
+          "t": " (the app switcher at the top of the workspace → Databricks One). The published dashboard and the Genie space from Step 15 appear there for business users without the full workspace UI."
+         }
+        ]
+       },
+       {
+        "type": "ol",
+        "items": [
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "You (admin/builder):",
+             "b": 1
+            },
+            {
+             "t": " in the workspace, click the "
+            },
+            {
+             "t": "app switcher",
+             "b": 1
+            },
+            {
+             "t": " (grid icon, upper-right corner) → "
+            },
+            {
+             "t": "Databricks One",
+             "b": 1
+            },
+            {
+             "t": ". Newer workspaces may label it "
+            },
+            {
+             "t": "Genie One",
+             "b": 1
+            },
+            {
+             "t": "; it is the same business-user view."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Find the dashboard and the Genie space there (home page, search, or "
+            },
+            {
+             "t": "Domains",
+             "b": 1
+            },
+            {
+             "t": "). Open each to confirm business users will see them."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Business users:",
+             "b": 1
+            },
+            {
+             "t": " give "
+            },
+            {
+             "t": "collections-analysts",
+             "c": 1
+            },
+            {
+             "t": " only the "
+            },
+            {
+             "t": "Consumer access",
+             "b": 1
+            },
+            {
+             "t": " entitlement (account console → Workspaces → "
+            },
+            {
+             "t": "dbw-najd-banking",
+             "c": 1
+            },
+            {
+             "t": " → Permissions, or workspace Settings → Identity and access → Groups → "
+            },
+            {
+             "t": "collections-analysts",
+             "c": 1
+            },
+            {
+             "t": " → Entitlements). Users with only Consumer access land straight on Databricks One when they sign in."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Users with more entitlements (like you) see the full workspace by default and switch with the app switcher."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "If Databricks One is missing from the switcher, a workspace admin can check "
+            },
+            {
+             "t": "Settings → Previews",
+             "b": 1
+            },
+            {
+             "t": " and turn it on."
+            }
+           ]
+          }
+         ],
+         [
+          {
+           "type": "p",
+           "segs": [
+            {
+             "t": "Account-level view (assets from every workspace): "
+            },
+            {
+             "t": "https://accounts.azuredatabricks.net",
+             "c": 1
+            },
+            {
+             "t": " → "
+            },
+            {
+             "t": "Databricks One",
+             "b": 1
+            },
+            {
+             "t": ". Users only see assets that were shared with them (action 6)."
+            }
+           ]
+          }
+         ]
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "segs": [
+      {
+       "t": "Check:",
+       "b": 1
+      },
+      {
+       "t": " sign in as a member of "
+      },
+      {
+       "t": "collections-analysts",
+       "c": 1
+      },
+      {
+       "t": ", open Databricks One, and confirm the counter shows 26.67% (8 of 30) and the Genie space answers question 1."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "step-help",
+   "num": null,
+   "title": "Troubleshooting",
+   "layer": "help",
+   "tip": "When stuck, check permissions and paths first: most errors here are one of the two.",
+   "tip_ar": "عند التعثّر افحص الصلاحيات والمسارات أولًا؛ فمعظم الأخطاء هنا أحدهما.",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      [
+       {
+        "t": "Symptom"
+       }
+      ],
+      [
+       {
+        "t": "Likely cause"
+       }
+      ],
+      [
+       {
+        "t": "Fix"
+       }
+      ]
+     ],
+     "rows": [
+      [
+       [
+        {
+         "t": "\"Access connector could not be found\" when creating the metastore or credential"
+        }
+       ],
+       [
+        {
+         "t": "Connector name pasted instead of Resource ID; connector in another Entra tenant; system-assigned identity off"
+        }
+       ],
+       [
+        {
+         "t": "Copy the full Resource ID from Overview → JSON View; check the tenant (top-right of the portal); turn on System assigned identity"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "Credentials list is empty in Catalog Explorer"
+        }
+       ],
+       [
+        {
+         "t": "No credential was auto-created with the metastore"
+        }
+       ],
+       [
+        {
+         "t": "Create it manually: Credentials → Create credential → Azure Managed Identity → paste the Resource ID (Step 6)"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "File events warning when creating an external location"
+        }
+       ],
+       [
+        {
+         "t": "File events not set up on the storage account"
+        }
+       ],
+       [
+        {
+         "t": "Click "
+        },
+        {
+         "t": "Force create",
+         "b": 1
+        },
+        {
+         "t": "; this project uses directory listing"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "\"Overlaps with managed storage\" on "
+        },
+        {
+         "t": "ext_metastore_root",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "Path is the metastore's own root"
+        }
+       ],
+       [
+        {
+         "t": "Skip that location; it is not needed"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "PERMISSION_DENIED",
+         "c": 1
+        },
+        {
+         "t": " or \"no parent external location\" on an "
+        },
+        {
+         "t": "abfss://",
+         "c": 1
+        },
+        {
+         "t": " path"
+        }
+       ],
+       [
+        {
+         "t": "No external location covers the path, or wrong URL"
+        }
+       ],
+       [
+        {
+         "t": "SHOW EXTERNAL LOCATIONS",
+         "c": 1
+        },
+        {
+         "t": "; create or fix "
+        },
+        {
+         "t": "ext_data",
+         "c": 1
+        },
+        {
+         "t": " (Step 7)"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "External location Test connection fails with 403"
+        }
+       ],
+       [
+        {
+         "t": "Storage Blob Data Contributor not assigned, wrong scope, or not yet applied"
+        }
+       ],
+       [
+        {
+         "t": "Assign the role to the access connector on the storage account; wait 5–10 minutes"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "National ID shows as a number like "
+        },
+        {
+         "t": "1.08E9",
+         "c": 1
+        },
+        {
+         "t": " or masking returns odd digits"
+        }
+       ],
+       [
+        {
+         "t": "Auto Loader inferred the ID as a number"
+        }
+       ],
+       [
+        {
+         "t": "Keep "
+        },
+        {
+         "t": "national_id_or_iqama STRING",
+         "c": 1
+        },
+        {
+         "t": " in "
+        },
+        {
+         "t": "schemaHints",
+         "c": 1
+        },
+        {
+         "t": "; delete the bronze schema and checkpoint folders and the table, then rerun"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "Second product file loaded but HF02 description did not change in silver"
+        }
+       ],
+       [
+        {
+         "t": "Streaming "
+        },
+        {
+         "t": "dropDuplicates",
+         "c": 1
+        },
+        {
+         "t": " before "
+        },
+        {
+         "t": "foreachBatch",
+         "c": 1
+        },
+        {
+         "t": " dropped the already-seen key"
+        }
+       ],
+       [
+        {
+         "t": "Dedupe inside "
+        },
+        {
+         "t": "foreachBatch",
+         "c": 1
+        },
+        {
+         "t": " (Step 10); reset the silver checkpoint and rerun"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "Silver reprocesses all rows every run / "
+        },
+        {
+         "t": "foreachBatch",
+         "c": 1
+        },
+        {
+         "t": " not available"
+        }
+       ],
+       [
+        {
+         "t": "Silver uses "
+        },
+        {
+         "t": "spark.read",
+         "c": 1
+        },
+        {
+         "t": " instead of "
+        },
+        {
+         "t": "spark.readStream.table",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "Read bronze with "
+        },
+        {
+         "t": "spark.readStream.table",
+         "c": 1
+        },
+        {
+         "t": "; keep "
+        },
+        {
+         "t": "spark.read",
+         "c": 1
+        },
+        {
+         "t": " only for dim lookups and gold"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "Error serialising the function or "
+        },
+        {
+         "t": "spark",
+         "c": 1
+        },
+        {
+         "t": " inside "
+        },
+        {
+         "t": "foreachBatch",
+         "c": 1
+        },
+        {
+         "t": " on serverless"
+        }
+       ],
+       [
+        {
+         "t": "Using the global "
+        },
+        {
+         "t": "spark",
+         "c": 1
+        },
+        {
+         "t": " session inside the batch function"
+        }
+       ],
+       [
+        {
+         "t": "Use "
+        },
+        {
+         "t": "batch_df.sparkSession",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "TABLE_OR_VIEW_NOT_FOUND",
+         "c": 1
+        },
+        {
+         "t": " for a dim in the fact notebook"
+        }
+       ],
+       [
+        {
+         "t": "Fact ran before the dims"
+        }
+       ],
+       [
+        {
+         "t": "Run dims first; in the job, the fact depends on all three dims"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "MERGE fails with schema mismatch after adding the Hijri column"
+        }
+       ],
+       [
+        {
+         "t": "Table schema was fixed on the first run"
+        }
+       ],
+       [
+        {
+         "t": "Drop the silver fact table and its checkpoint, then rerun with the new column"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "Gold returns 0 re-delinquencies"
+        }
+       ],
+       [
+        {
+         "t": "cure_date",
+         "c": 1
+        },
+        {
+         "t": " read as string or null; window ordered by the wrong column"
+        }
+       ],
+       [
+        {
+         "t": "Check "
+        },
+        {
+         "t": "DESCRIBE banking.silver.fact_repayment",
+         "c": 1
+        },
+        {
+         "t": ": "
+        },
+        {
+         "t": "due_date",
+         "c": 1
+        },
+        {
+         "t": " and "
+        },
+        {
+         "t": "cure_date",
+         "c": 1
+        },
+        {
+         "t": " must be "
+        },
+        {
+         "t": "DATE",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "Bundle deploys but the job runs old notebooks or \"notebook not found\" in prod"
+        }
+       ],
+       [
+        {
+         "t": "Absolute "
+        },
+        {
+         "t": "/Workspace/Users/...",
+         "c": 1
+        },
+        {
+         "t": " paths left in "
+        },
+        {
+         "t": "resources/job.yml",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "Use relative paths ("
+        },
+        {
+         "t": "../bronze/...",
+         "c": 1
+        },
+        {
+         "t": ") and remove "
+        },
+        {
+         "t": "source",
+         "c": 1
+        },
+        {
+         "t": " / "
+        },
+        {
+         "t": "git_source",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "Deploy fails with a host mismatch error on one branch"
+        }
+       ],
+       [
+        {
+         "t": "host",
+         "c": 1
+        },
+        {
+         "t": " in "
+        },
+        {
+         "t": "databricks.yml",
+         "c": 1
+        },
+        {
+         "t": " on that branch differs from "
+        },
+        {
+         "t": "DATABRICKS_HOST",
+         "c": 1
+        }
+       ],
+       [
+        {
+         "t": "Keep the same host on all branches, or use a variable per target"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "GitHub Action fails with 401 / invalid token"
+        }
+       ],
+       [
+        {
+         "t": "Token expired or secret named wrongly"
+        }
+       ],
+       [
+        {
+         "t": "Regenerate the token; secret names must be exactly "
+        },
+        {
+         "t": "DATABRICKS_HOST",
+         "c": 1
+        },
+        {
+         "t": " and "
+        },
+        {
+         "t": "DATABRICKS_TOKEN",
+         "c": 1
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "Genie says it cannot find the table"
+        }
+       ],
+       [
+        {
+         "t": "Users lack "
+        },
+        {
+         "t": "USE CATALOG",
+         "c": 1
+        },
+        {
+         "t": ", "
+        },
+        {
+         "t": "USE SCHEMA",
+         "c": 1
+        },
+        {
+         "t": " or "
+        },
+        {
+         "t": "SELECT",
+         "c": 1
+        },
+        {
+         "t": ", or no warehouse access"
+        }
+       ],
+       [
+        {
+         "t": "Run the grants in Step 15; give the group Can use on the SQL warehouse"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "Dashboard viewers see \"no permission\""
+        }
+       ],
+       [
+        {
+         "t": "Published without embedded credentials and viewers lack grants"
+        }
+       ],
+       [
+        {
+         "t": "Republish with Embed credentials, or grant "
+        },
+        {
+         "t": "SELECT",
+         "c": 1
+        },
+        {
+         "t": " on the gold tables"
+        }
+       ]
+      ],
+      [
+       [
+        {
+         "t": "A silver dim holds only the newest rows (e.g. dim_branch has only BR016)"
+        }
+       ],
+       [
+        {
+         "t": "The silver checkpoint already recorded the earlier batch, but the table was dropped, renamed or never written, so the next run treated BR016 as the \"first run\" and overwrote"
+        }
+       ],
+       [
+        {
+         "t": "DROP TABLE banking.silver.dim_branch; delete checkpoints/silver/dim_branch/ with dbutils.fs.rm(..., True); rerun the notebook. Always drop a table and its checkpoint together"
+        }
+       ]
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}
